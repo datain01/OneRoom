@@ -33,7 +33,8 @@ public class DialogueManager : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(5f); // 5초 간격
+            float waitTime = Random.Range(5f, 15f); // 5초에서 15초 사이의 랜덤한 간격
+            yield return new WaitForSeconds(waitTime);
 
             string randomDialogue = GetRandomDialogue();
             DisplayBubble(randomDialogue);
