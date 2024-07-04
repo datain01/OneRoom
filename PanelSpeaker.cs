@@ -8,7 +8,7 @@ using UnityEngine.Networking;
 
 public class PanelSpeaker : MonoBehaviour
 {
-    public GameObject playlistPanel;
+    public GameObject playlistPanel; // Content 오브젝트를 할당
     public GameObject musicItemPrefab;
     public Button buttonPlayPause;
     public Button nextButton;
@@ -22,6 +22,7 @@ public class PanelSpeaker : MonoBehaviour
     private List<string> playlist = new List<string>();
     private int currentTrackIndex = 0;
     private bool isShuffling = false;
+    private string selectedFilePath;
     public string musicFolderPath { get; private set; }
 
     private void Start()
@@ -64,17 +65,32 @@ public class PanelSpeaker : MonoBehaviour
 
         playlist.Add(filePath);
         GameObject newItem = Instantiate(musicItemPrefab, playlistPanel.transform);
-        
-        // MusicItem의 RectTransform을 Playlist Panel의 RectTransform에 맞추기
-        RectTransform newItemRect = newItem.GetComponent<RectTransform>();
-        RectTransform playlistRect = playlistPanel.GetComponent<RectTransform>();
-        newItemRect.sizeDelta = new Vector2(playlistRect.rect.width, newItemRect.sizeDelta.y);
 
         TextMeshProUGUI fileNameText = newItem.GetComponentInChildren<TextMeshProUGUI>();
         if (fileNameText != null)
         {
-            fileNameText.text = Path.GetFileName(filePath);
+            fileNameText.text = ShortenText(Path.GetFileName(filePath), 20); // 20 글자로 제한
         }
+
+        Button itemButton = newItem.GetComponent<Button>();
+        if (itemButton != null)
+        {
+            itemButton.onClick.AddListener(() => SelectMusic(filePath));
+        }
+    }
+
+    private string ShortenText(string text, int maxLength)
+    {
+        if (text.Length > maxLength)
+        {
+            return text.Substring(0, maxLength) + "...";
+        }
+        return text;
+    }
+
+    private void SelectMusic(string filePath)
+    {
+        selectedFilePath = filePath;
     }
 
     public void TogglePlayPause()
@@ -85,15 +101,15 @@ public class PanelSpeaker : MonoBehaviour
         }
         else
         {
-            PlayMusic();
+            PlaySelectedMusic();
         }
     }
 
-    public void PlayMusic()
+    public void PlaySelectedMusic()
     {
-        if (playlist.Count > 0)
+        if (!string.IsNullOrEmpty(selectedFilePath))
         {
-            StartCoroutine(PlayTrack(playlist[currentTrackIndex]));
+            StartCoroutine(PlayTrack(selectedFilePath));
             buttonImage.sprite = pauseIcon;
         }
     }
@@ -127,7 +143,8 @@ public class PanelSpeaker : MonoBehaviour
         if (playlist.Count > 0)
         {
             currentTrackIndex = (currentTrackIndex + 1) % playlist.Count;
-            PlayMusic();
+            selectedFilePath = playlist[currentTrackIndex];
+            PlaySelectedMusic();
         }
     }
 
@@ -136,7 +153,8 @@ public class PanelSpeaker : MonoBehaviour
         if (playlist.Count > 0)
         {
             currentTrackIndex = (currentTrackIndex - 1 + playlist.Count) % playlist.Count;
-            PlayMusic();
+            selectedFilePath = playlist[currentTrackIndex];
+            PlaySelectedMusic();
         }
     }
 
