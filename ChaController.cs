@@ -13,8 +13,6 @@ public class ChaController : MonoBehaviour
 
     private void Start()
     {
-        // Character와 Floor 레이어의 충돌 무시
-        Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("Character"), LayerMask.NameToLayer("Floor"), true);
         SetInitialPosition();
         SetNewTargetPosition();
     }
@@ -99,13 +97,11 @@ public class ChaController : MonoBehaviour
 
     private void OnMouseDown()
     {
-        // Debug.Log("OnMouseDown");
         isDragged = true;
     }
 
     private void OnMouseDrag()
     {
-        // Debug.Log("OnMouseDrag");
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3 newPosition = new Vector3(mousePosition.x, mousePosition.y, transform.position.z);
 
@@ -117,7 +113,6 @@ public class ChaController : MonoBehaviour
 
     private void OnMouseUp()
     {
-        // Debug.Log("OnMouseUp");
         isDragged = false;
         SetNewTargetPosition();
         isMoving = true;
@@ -126,5 +121,18 @@ public class ChaController : MonoBehaviour
     private bool IsWithinBoundary(Vector3 position)
     {
         return boundaryCollider.OverlapPoint(position);
+    }
+
+    public void StopAndRestart()
+    {
+        StopAllCoroutines(); // 모든 코루틴을 멈추고
+        StartCoroutine(RestartAfterWait()); // 대기 후 다시 시작
+    }
+
+    private IEnumerator RestartAfterWait()
+    {
+        yield return new WaitForSeconds(waitTime);
+        SetNewTargetPosition();
+        isMoving = true;
     }
 }

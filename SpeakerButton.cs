@@ -2,32 +2,22 @@ using UnityEngine;
 
 public class SpeakerButton : MonoBehaviour
 {
-    public GameObject panelSpeakerPrefab;
-    private GameObject currentPanel;
+    public GameObject panelSpeaker; // 패널 스피커 오브젝트를 프리팹이 아닌 기존 씬에 있는 오브젝트로 참조합니다.
+
+    private void Awake()
+    {
+        if (panelSpeaker != null)
+        {
+            panelSpeaker.GetComponent<PanelSpeaker>().InitializeSpeaker(); // 패널 스피커 초기화
+            panelSpeaker.SetActive(false); // 게임 시작 시 패널을 비활성화합니다.
+        }
+    }
 
     public void OnSpeakerButtonClick()
     {
-        if (currentPanel == null)
+        if (panelSpeaker != null)
         {
-            Canvas canvas = FindObjectOfType<Canvas>();
-            if (canvas != null)
-            {
-                currentPanel = Instantiate(panelSpeakerPrefab, canvas.transform);
-                PanelSpeaker panelSpeaker = currentPanel.GetComponent<PanelSpeaker>();
-                if (panelSpeaker != null)
-                {
-                    Debug.Log("Music folder path: " + panelSpeaker.musicFolderPath);
-                }
-            }
-            else
-            {
-                Debug.LogError("Canvas not found in the scene.");
-            }
-        }
-        else
-        {
-            Destroy(currentPanel);
-            currentPanel = null;
+            panelSpeaker.SetActive(!panelSpeaker.activeSelf); // 패널을 활성화/비활성화 토글합니다.
         }
     }
 }

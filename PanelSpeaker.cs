@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.IO;
 using UnityEngine.Networking;
+using UnityEngine.EventSystems;
 
 public class PanelSpeaker : MonoBehaviour
 {
@@ -21,15 +22,37 @@ public class PanelSpeaker : MonoBehaviour
     public Image shuffleButtonImage; // 셔플 버튼 아이콘 이미지
     public Sprite shuffleIcon; // 셔플 아이콘
     public Sprite noShuffleIcon; // 비셔플 아이콘
+    public Slider bgmSlider; // BGM 볼륨 조절 슬라이더
+    public Button bgmMuteButton; // BGM 뮤트 버튼
+    public Sprite muteIcon; // 뮤트 아이콘
+    public Sprite unmuteIcon; // 비뮤트 아이콘
 
     private List<string> playlist = new List<string>();
+    private List<Button> buttons = new List<Button>();
     private int currentTrackIndex = 0;
     private bool isShuffling = false;
     private string selectedFilePath;
     private AudioSource audioSource;
+    private bool isMuted = false;
     public string musicFolderPath { get; private set; }
 
+    private const string VolumePrefKey = "BgmVolume";
+    private const string MutePrefKey = "BgmMute";
+
+    private Button currentPlayingButton;
+
     private void Start()
+    {
+        buttonPlayPause.onClick.AddListener(TogglePlayPause);
+        nextButton.onClick.AddListener(PlayNextTrack);
+        prevButton.onClick.AddListener(PlayPreviousTrack);
+        shuffleButton.onClick.AddListener(ToggleShuffle);
+        buttonClose.onClick.AddListener(ClosePanelSpeaker); // Close 버튼 이벤트 추가
+        bgmSlider.onValueChanged.AddListener(SetBgmVolume); // 슬라이더 이벤트 추가
+        bgmMuteButton.onClick.AddListener(ToggleMute); // 뮤트 버튼 이벤트 추가
+    }
+
+    public void InitializeSpeaker()
     {
         GameObject bgmObject = GameObject.FindGameObjectWithTag("BGM");
         if (bgmObject != null)
@@ -57,11 +80,19 @@ public class PanelSpeaker : MonoBehaviour
 
         LoadMusicFiles();
 
-        buttonPlayPause.onClick.AddListener(TogglePlayPause);
-        nextButton.onClick.AddListener(PlayNextTrack);
-        prevButton.onClick.AddListener(PlayPreviousTrack);
-        shuffleButton.onClick.AddListener(ToggleShuffle);
-        buttonClose.onClick.AddListener(ClosePanelSpeaker); // Close 버튼 이벤트 추가
+        // PlayerPrefs에서 볼륨과 뮤트 상태를 불러옴
+        if (audioSource != null)
+        {
+            float savedVolume = PlayerPrefs.GetFloat(VolumePrefKey, audioSource.volume);
+            bool savedMute = PlayerPrefs.GetInt(MutePrefKey, 0) == 1;
+
+            bgmSlider.value = savedVolume;
+            audioSource.volume = savedVolume;
+
+            isMuted = savedMute;
+            audioSource.mute = isMuted;
+            UpdateMuteIcon();
+        }
 
         // 셔플 버튼을 비셔플 상태로 초기화
         shuffleButtonImage.sprite = noShuffleIcon;
@@ -97,7 +128,8 @@ public class PanelSpeaker : MonoBehaviour
         Button itemButton = newItem.GetComponent<Button>();
         if (itemButton != null)
         {
-            itemButton.onClick.AddListener(() => PlaySelectedMusic(filePath));
+            itemButton.onClick.AddListener(() => PlaySelectedMusic(filePath, itemButton));
+            buttons.Add(itemButton);
         }
     }
 
@@ -120,22 +152,35 @@ public class PanelSpeaker : MonoBehaviour
         {
             if (string.IsNullOrEmpty(selectedFilePath) && playlist.Count > 0)
             {
-                PlaySelectedMusic(playlist[0]);
+                PlaySelectedMusic(playlist[0], buttons.Count > 0 ? buttons[0] : null);
             }
             else
             {
-                PlaySelectedMusic(selectedFilePath);
+                PlaySelectedMusic(selectedFilePath, currentPlayingButton);
             }
         }
     }
 
-    public void PlaySelectedMusic(string filePath)
+    public void PlaySelectedMusic(string filePath, Button button)
     {
         if (!string.IsNullOrEmpty(filePath))
         {
             selectedFilePath = filePath;
             StartCoroutine(PlayTrack(selectedFilePath));
             buttonImage.sprite = pauseIcon;
+
+            if (currentPlayingButton != null)
+            {
+                // 이전 재생 버튼을 원래 상태로 되돌림
+                currentPlayingButton.interactable = true;
+            }
+
+            if (button != null)
+            {
+                currentPlayingButton = button;
+                currentPlayingButton.interactable = false;
+                EventSystem.current.SetSelectedGameObject(button.gameObject);
+            }
         }
     }
 
@@ -176,7 +221,7 @@ public class PanelSpeaker : MonoBehaviour
                 currentTrackIndex = (currentTrackIndex + 1) % playlist.Count;
             }
             selectedFilePath = playlist[currentTrackIndex];
-            PlaySelectedMusic(selectedFilePath);
+            PlaySelectedMusic(selectedFilePath, buttons.Count > currentTrackIndex ? buttons[currentTrackIndex] : null);
         }
     }
 
@@ -193,7 +238,7 @@ public class PanelSpeaker : MonoBehaviour
                 currentTrackIndex = (currentTrackIndex - 1 + playlist.Count) % playlist.Count;
             }
             selectedFilePath = playlist[currentTrackIndex];
-            PlaySelectedMusic(selectedFilePath);
+            PlaySelectedMusic(selectedFilePath, buttons.Count > currentTrackIndex ? buttons[currentTrackIndex] : null);
         }
     }
 
@@ -205,6 +250,38 @@ public class PanelSpeaker : MonoBehaviour
 
     private void ClosePanelSpeaker()
     {
-        Destroy(gameObject);
+        gameObject.SetActive(false); // 패널을 비활성화합니다.
+    }
+
+    private void SetBgmVolume(float volume)
+    {
+        if (audioSource != null)
+        {
+            audioSource.volume = volume;
+            PlayerPrefs.SetFloat(VolumePrefKey, volume);
+        }
+    }
+
+    private void ToggleMute()
+    {
+        if (audioSource != null)
+        {
+            isMuted = !isMuted;
+            audioSource.mute = isMuted;
+            PlayerPrefs.SetInt(MutePrefKey, isMuted ? 1 : 0);
+            UpdateMuteIcon();
+        }
+    }
+
+    private void UpdateMuteIcon()
+    {
+        if (isMuted)
+        {
+            bgmMuteButton.image.sprite = muteIcon;
+        }
+        else
+        {
+            bgmMuteButton.image.sprite = unmuteIcon;
+        }
     }
 }
