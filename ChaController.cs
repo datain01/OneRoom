@@ -13,6 +13,9 @@ public class ChaController : MonoBehaviour
 
     private void Start()
     {
+        // Character와 Floor 레이어의 충돌 무시
+        Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("Character"), LayerMask.NameToLayer("Floor"), true);
+        SetInitialPosition();
         SetNewTargetPosition();
     }
 
@@ -28,6 +31,26 @@ public class ChaController : MonoBehaviour
             {
                 StartCoroutine(WaitAndMove());
             }
+        }
+    }
+
+    private void SetInitialPosition()
+    {
+        if (boundaryCollider != null)
+        {
+            Vector3 randomPosition;
+            do
+            {
+                float randomX = Random.Range(boundaryCollider.bounds.min.x, boundaryCollider.bounds.max.x);
+                float randomY = Random.Range(boundaryCollider.bounds.min.y, boundaryCollider.bounds.max.y);
+                randomPosition = new Vector3(randomX, randomY, transform.position.z);
+            } while (!IsWithinBoundary(randomPosition));
+
+            transform.position = randomPosition;
+        }
+        else
+        {
+            transform.position = new Vector3(Random.Range(-5.0f, 5.0f), Random.Range(-5.0f, 5.0f), transform.position.z);
         }
     }
 
@@ -76,11 +99,13 @@ public class ChaController : MonoBehaviour
 
     private void OnMouseDown()
     {
+        // Debug.Log("OnMouseDown");
         isDragged = true;
     }
 
     private void OnMouseDrag()
     {
+        // Debug.Log("OnMouseDrag");
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3 newPosition = new Vector3(mousePosition.x, mousePosition.y, transform.position.z);
 
@@ -92,6 +117,7 @@ public class ChaController : MonoBehaviour
 
     private void OnMouseUp()
     {
+        // Debug.Log("OnMouseUp");
         isDragged = false;
         SetNewTargetPosition();
         isMoving = true;
