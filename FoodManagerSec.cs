@@ -25,8 +25,8 @@ public class FoodManagerSec : MonoBehaviour
 
         yield return new WaitForSeconds(1f);
 
-        // CharacterOne의 색을 하얀색으로 되돌림
-        characterRenderer.color = Color.magenta;
+        // CharacterOne의 색을 원래색으로 되돌림
+        characterRenderer.color = Color.cyan;
 
         // Food 재생성
         SpawnFood();
