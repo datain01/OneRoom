@@ -14,19 +14,37 @@ public class PanelSpeaker : MonoBehaviour
     public Button nextButton;
     public Button prevButton;
     public Button shuffleButton;
-    public AudioSource audioSource;
-    public Image buttonImage; // 버튼 아이콘 이미지
+    public Button buttonClose; // 닫기 버튼
+    public Image buttonImage; // 재생/일시정지 버튼 아이콘 이미지
     public Sprite playIcon; // 재생 아이콘
     public Sprite pauseIcon; // 일시정지 아이콘
+    public Image shuffleButtonImage; // 셔플 버튼 아이콘 이미지
+    public Sprite shuffleIcon; // 셔플 아이콘
+    public Sprite noShuffleIcon; // 비셔플 아이콘
 
     private List<string> playlist = new List<string>();
     private int currentTrackIndex = 0;
     private bool isShuffling = false;
     private string selectedFilePath;
+    private AudioSource audioSource;
     public string musicFolderPath { get; private set; }
 
     private void Start()
     {
+        GameObject bgmObject = GameObject.FindGameObjectWithTag("BGM");
+        if (bgmObject != null)
+        {
+            audioSource = bgmObject.GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                audioSource = bgmObject.AddComponent<AudioSource>();
+            }
+        }
+        else
+        {
+            Debug.LogError("BGM 오브젝트를 찾을 수 없습니다. BGM 태그가 설정된 오브젝트를 확인해주세요.");
+        }
+
         musicFolderPath = Path.Combine(Application.persistentDataPath, "Music");
 
         // 음악 폴더가 없으면 생성
@@ -43,6 +61,10 @@ public class PanelSpeaker : MonoBehaviour
         nextButton.onClick.AddListener(PlayNextTrack);
         prevButton.onClick.AddListener(PlayPreviousTrack);
         shuffleButton.onClick.AddListener(ToggleShuffle);
+        buttonClose.onClick.AddListener(ClosePanelSpeaker); // Close 버튼 이벤트 추가
+
+        // 셔플 버튼을 비셔플 상태로 초기화
+        shuffleButtonImage.sprite = noShuffleIcon;
     }
 
     private void LoadMusicFiles()
@@ -69,13 +91,13 @@ public class PanelSpeaker : MonoBehaviour
         TextMeshProUGUI fileNameText = newItem.GetComponentInChildren<TextMeshProUGUI>();
         if (fileNameText != null)
         {
-            fileNameText.text = ShortenText(Path.GetFileName(filePath), 20); // 20 글자로 제한
+            fileNameText.text = ShortenText(Path.GetFileNameWithoutExtension(filePath), 20); // 20 글자로 제한하고 .mp3 제외
         }
 
         Button itemButton = newItem.GetComponent<Button>();
         if (itemButton != null)
         {
-            itemButton.onClick.AddListener(() => SelectMusic(filePath));
+            itemButton.onClick.AddListener(() => PlaySelectedMusic(filePath));
         }
     }
 
@@ -88,11 +110,6 @@ public class PanelSpeaker : MonoBehaviour
         return text;
     }
 
-    private void SelectMusic(string filePath)
-    {
-        selectedFilePath = filePath;
-    }
-
     public void TogglePlayPause()
     {
         if (audioSource.isPlaying)
@@ -101,14 +118,22 @@ public class PanelSpeaker : MonoBehaviour
         }
         else
         {
-            PlaySelectedMusic();
+            if (string.IsNullOrEmpty(selectedFilePath) && playlist.Count > 0)
+            {
+                PlaySelectedMusic(playlist[0]);
+            }
+            else
+            {
+                PlaySelectedMusic(selectedFilePath);
+            }
         }
     }
 
-    public void PlaySelectedMusic()
+    public void PlaySelectedMusic(string filePath)
     {
-        if (!string.IsNullOrEmpty(selectedFilePath))
+        if (!string.IsNullOrEmpty(filePath))
         {
+            selectedFilePath = filePath;
             StartCoroutine(PlayTrack(selectedFilePath));
             buttonImage.sprite = pauseIcon;
         }
@@ -142,9 +167,16 @@ public class PanelSpeaker : MonoBehaviour
     {
         if (playlist.Count > 0)
         {
-            currentTrackIndex = (currentTrackIndex + 1) % playlist.Count;
+            if (isShuffling)
+            {
+                currentTrackIndex = Random.Range(0, playlist.Count);
+            }
+            else
+            {
+                currentTrackIndex = (currentTrackIndex + 1) % playlist.Count;
+            }
             selectedFilePath = playlist[currentTrackIndex];
-            PlaySelectedMusic();
+            PlaySelectedMusic(selectedFilePath);
         }
     }
 
@@ -152,14 +184,27 @@ public class PanelSpeaker : MonoBehaviour
     {
         if (playlist.Count > 0)
         {
-            currentTrackIndex = (currentTrackIndex - 1 + playlist.Count) % playlist.Count;
+            if (isShuffling)
+            {
+                currentTrackIndex = Random.Range(0, playlist.Count);
+            }
+            else
+            {
+                currentTrackIndex = (currentTrackIndex - 1 + playlist.Count) % playlist.Count;
+            }
             selectedFilePath = playlist[currentTrackIndex];
-            PlaySelectedMusic();
+            PlaySelectedMusic(selectedFilePath);
         }
     }
 
     public void ToggleShuffle()
     {
         isShuffling = !isShuffling;
+        shuffleButtonImage.sprite = isShuffling ? shuffleIcon : noShuffleIcon;
+    }
+
+    private void ClosePanelSpeaker()
+    {
+        Destroy(gameObject);
     }
 }
