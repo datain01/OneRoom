@@ -28,8 +28,8 @@ public class BubbleFollowSec : MonoBehaviour
     {
         if (target != null)
         {
-            Vector3 screenPosition = Camera.main.WorldToScreenPoint(target.position) + offset;
-            rectTransform.position = screenPosition;
+            Vector3 worldPosition = target.position + offset;
+            rectTransform.position = worldPosition;
         }
     }
 }

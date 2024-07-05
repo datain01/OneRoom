@@ -20,7 +20,7 @@ public class BubbleFollow : MonoBehaviour
         }
         else
         {
-            Debug.LogError("태그가 CharacterOne인 오브젝트를 찾을 수 없습니다.");
+            Debug.LogError("태그가 " + targetTag + "인 오브젝트를 찾을 수 없습니다.");
         }
     }
 
@@ -28,8 +28,8 @@ public class BubbleFollow : MonoBehaviour
     {
         if (target != null)
         {
-            Vector3 screenPosition = Camera.main.WorldToScreenPoint(target.position) + offset;
-            rectTransform.position = screenPosition;
+            Vector3 worldPosition = target.position + offset;
+            rectTransform.position = worldPosition;
         }
     }
 }

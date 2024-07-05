@@ -7,14 +7,13 @@ public class DialogueManagerSec : MonoBehaviour
     public GameObject panelBubblePrefab; // PanelBubble 프리팹을 참조
     public DialogueData dialogueData; // DialogueData 스크립터블 오브젝트를 참조
     public GameObject panelSpeaker; // PanelSpeaker 오브젝트를 인스펙터에서 할당
+    public Canvas canvas; // UI 캔버스를 참조
 
     private GameObject character; // CharacterSec 오브젝트를 참조
-    private Canvas canvas; // UI 캔버스를 참조
 
     private void Start()
     {
         character = GameObject.FindGameObjectWithTag("CharacterSec");
-        canvas = GameObject.FindObjectOfType<Canvas>();
 
         if (character == null)
         {
@@ -33,7 +32,6 @@ public class DialogueManagerSec : MonoBehaviour
             Debug.LogError("PanelSpeaker 오브젝트가 인스펙터에 할당되지 않았습니다.");
             return;
         }
-
 
         StartCoroutine(DisplayDialogue());
     }
@@ -66,15 +64,17 @@ public class DialogueManagerSec : MonoBehaviour
         if (string.IsNullOrEmpty(dialogue)) return;
 
         // 캐릭터 위에 위치하도록 설정
-        Vector3 offset = new Vector3(40f, 120f, 0); // UI 오프셋
+        Vector3 offset = new Vector3(0.3f, 1.3f, 0f); // UI 오프셋
+        Vector3 spawnPosition = character.transform.position + offset;
 
-        GameObject bubble = Instantiate(panelBubblePrefab, canvas.transform);
+        GameObject bubble = Instantiate(panelBubblePrefab, spawnPosition, Quaternion.identity, canvas.transform);
 
-        // BubbleFollowSec 스크립트 설정
-        BubbleFollowSec bubbleFollow = bubble.GetComponent<BubbleFollowSec>();
+        // BubbleFollow 스크립트 설정
+        BubbleFollow bubbleFollow = bubble.GetComponent<BubbleFollow>();
         if (bubbleFollow != null)
         {
             bubbleFollow.offset = offset;
+            bubbleFollow.targetTag = "CharacterSec"; // 적절한 태그를 설정합니다.
         }
 
         TMP_Text dialogueText = bubble.GetComponentInChildren<TMP_Text>();
@@ -85,7 +85,7 @@ public class DialogueManagerSec : MonoBehaviour
 
         // 2초 후에 삭제
         Destroy(bubble, 2f);
-        
+
         // PanelSpeaker를 최상단으로 이동
         panelSpeaker.transform.SetAsLastSibling();
     }
