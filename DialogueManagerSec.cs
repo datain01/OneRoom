@@ -6,6 +6,8 @@ public class DialogueManagerSec : MonoBehaviour
 {
     public GameObject panelBubblePrefab; // PanelBubble 프리팹을 참조
     public DialogueData dialogueData; // DialogueData 스크립터블 오브젝트를 참조
+    public GameObject panelSpeaker; // PanelSpeaker 오브젝트를 인스펙터에서 할당
+
     private GameObject character; // CharacterSec 오브젝트를 참조
     private Canvas canvas; // UI 캔버스를 참조
 
@@ -25,6 +27,13 @@ public class DialogueManagerSec : MonoBehaviour
             Debug.LogError("Canvas 오브젝트를 찾을 수 없습니다.");
             return;
         }
+
+        if (panelSpeaker == null)
+        {
+            Debug.LogError("PanelSpeaker 오브젝트가 인스펙터에 할당되지 않았습니다.");
+            return;
+        }
+
 
         StartCoroutine(DisplayDialogue());
     }
@@ -66,7 +75,6 @@ public class DialogueManagerSec : MonoBehaviour
         if (bubbleFollow != null)
         {
             bubbleFollow.offset = offset;
-            Debug.Log("BubbleFollowSec offset set: " + offset); // 디버그 로그 추가
         }
 
         TMP_Text dialogueText = bubble.GetComponentInChildren<TMP_Text>();
@@ -77,5 +85,8 @@ public class DialogueManagerSec : MonoBehaviour
 
         // 2초 후에 삭제
         Destroy(bubble, 2f);
+        
+        // PanelSpeaker를 최상단으로 이동
+        panelSpeaker.transform.SetAsLastSibling();
     }
 }
