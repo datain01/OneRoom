@@ -34,6 +34,12 @@ public class DialogueManagerSec : MonoBehaviour
             return;
         }
 
+        if (panelOption == null)
+        {
+            Debug.LogError("PanelOption 오브젝트가 인스펙터에 할당되지 않았습니다.");
+            return;
+        }
+
         StartCoroutine(DisplayDialogue());
     }
 
