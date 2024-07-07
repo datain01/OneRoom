@@ -85,7 +85,10 @@ public class PanelOptionManager : MonoBehaviour
             new TMP_Dropdown.OptionData("1280x720"),
             new TMP_Dropdown.OptionData("1024x576"),
             new TMP_Dropdown.OptionData("960x540"),
-            new TMP_Dropdown.OptionData("800x450")
+            new TMP_Dropdown.OptionData("800x450"),
+            new TMP_Dropdown.OptionData("640x360"),
+            new TMP_Dropdown.OptionData("480x270"),
+            new TMP_Dropdown.OptionData("320x180")
         };
         resolutionDropdown.ClearOptions();
         resolutionDropdown.AddOptions(options);
@@ -132,6 +135,15 @@ public class PanelOptionManager : MonoBehaviour
                 break;
             case 6:
                 Screen.SetResolution(800, 450, isFullscreen);
+                break;
+            case 7:
+                Screen.SetResolution(640, 360, isFullscreen);
+                break;
+            case 8:
+                Screen.SetResolution(480, 270, isFullscreen);
+                break;
+            case 9:
+                Screen.SetResolution(320, 180, isFullscreen);
                 break;
         }
     }
