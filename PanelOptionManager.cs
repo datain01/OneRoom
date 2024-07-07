@@ -12,18 +12,26 @@ public class PanelOptionManager : MonoBehaviour
     public GameObject panelOption; // PanelOption을 참조
     public TMP_Dropdown resolutionDropdown; // 해상도 드롭다운을 참조
     public TMP_Dropdown programDropdown; // 실행 중인 프로그램 드롭다운을 참조
+    public TMP_Dropdown pipResolutionDropdown; // PiP 해상도 드롭다운 추가
     public Button fullscreenButton; // 전체화면/창모드 전환 버튼을 참조
+    public Button pipButton; // PiP 모드 전환 버튼 추가
     public Sprite fullscreenIcon; // 전체화면 아이콘
     public Sprite windowedIcon; // 창모드 아이콘
     private bool isFullscreen = true; // 현재 전체화면 상태를 저장
+    private bool isPipMode = false; // PiP 모드 상태를 저장
     public StopwatchManager stopwatchManager; // 스톱워치 매니저 참조
     private string selectedProgram = "none"; // 선택된 프로그램
+    private int pipWidth = 320; // 기본 PiP 창 너비
+    private int pipHeight = 180; // 기본 PiP 창 높이
 
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -33,10 +41,20 @@ public class PanelOptionManager : MonoBehaviour
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool IsWindowVisible(IntPtr hWnd);
 
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    private static extern int GetWindowTextLength(IntPtr hWnd);
+
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
     private static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
 
     private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+    private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+    private static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOZORDER = 0x0004;
+    private const uint SWP_SHOWWINDOW = 0x0040;
 
     private static readonly HashSet<string> systemProcessNames = new HashSet<string>
     {
@@ -51,13 +69,18 @@ public class PanelOptionManager : MonoBehaviour
         // 드롭다운 이벤트 리스너 추가
         resolutionDropdown.onValueChanged.AddListener(delegate { SetResolution(resolutionDropdown.value); });
         programDropdown.onValueChanged.AddListener(delegate { SetProgram(programDropdown.value); });
+        pipResolutionDropdown.onValueChanged.AddListener(delegate { SetPipResolution(pipResolutionDropdown.value); });
 
         // 전체화면/창모드 버튼 이벤트 리스너 추가
         fullscreenButton.onClick.AddListener(ToggleFullscreen);
 
+        // PiP 모드 버튼 이벤트 리스너 추가
+        pipButton.onClick.AddListener(TogglePipMode);
+
         // 드롭다운 옵션 설정
         SetResolutionDropdownOptions();
         SetProgramDropdownOptions();
+        SetPipResolutionDropdownOptions();
 
         // 초기 아이콘 설정
         UpdateFullscreenIcon();
@@ -92,6 +115,18 @@ public class PanelOptionManager : MonoBehaviour
         };
         resolutionDropdown.ClearOptions();
         resolutionDropdown.AddOptions(options);
+    }
+
+    private void SetPipResolutionDropdownOptions()
+    {
+        List<TMP_Dropdown.OptionData> options = new List<TMP_Dropdown.OptionData>
+        {
+            new TMP_Dropdown.OptionData("640x360"),
+            new TMP_Dropdown.OptionData("480x270"),
+            new TMP_Dropdown.OptionData("320x180")
+        };
+        pipResolutionDropdown.ClearOptions();
+        pipResolutionDropdown.AddOptions(options);
     }
 
     private void SetProgramDropdownOptions()
@@ -148,6 +183,30 @@ public class PanelOptionManager : MonoBehaviour
         }
     }
 
+    private void SetPipResolution(int index)
+    {
+        switch (index)
+        {
+            case 0:
+                pipWidth = 640;
+                pipHeight = 360;
+                break;
+            case 1:
+                pipWidth = 480;
+                pipHeight = 270;
+                break;
+            case 2:
+                pipWidth = 320;
+                pipHeight = 180;
+                break;
+        }
+
+        if (isPipMode)
+        {
+            SetWindowPos(GetForegroundWindow(), HWND_TOPMOST, 100, 100, pipWidth, pipHeight, SWP_SHOWWINDOW);
+        }
+    }
+
     private void SetProgram(int index)
     {
         selectedProgram = programDropdown.options[index].text;
@@ -185,9 +244,6 @@ public class PanelOptionManager : MonoBehaviour
         return taskbarProcesses;
     }
 
-    [DllImport("user32.dll", CharSet = CharSet.Auto)]
-    private static extern int GetWindowTextLength(IntPtr hWnd);
-
     private void CheckFocusedProgram()
     {
         if (selectedProgram == "none") return;
@@ -214,6 +270,21 @@ public class PanelOptionManager : MonoBehaviour
         isFullscreen = !isFullscreen;
         Screen.fullScreen = isFullscreen;
         UpdateFullscreenIcon();
+    }
+
+    private void TogglePipMode()
+    {
+        isPipMode = !isPipMode;
+        if (isPipMode)
+        {
+            // PiP 모드로 전환: 작은 창으로 설정
+            SetWindowPos(GetForegroundWindow(), HWND_TOPMOST, 100, 100, pipWidth, pipHeight, SWP_SHOWWINDOW);
+        }
+        else
+        {
+            // PiP 모드 해제: 원래 크기로 복원 (여기서는 예시로 1920x1080 해상도로 설정)
+            SetWindowPos(GetForegroundWindow(), HWND_NOTOPMOST, 0, 0, 1920, 1080, SWP_SHOWWINDOW);
+        }
     }
 
     private void UpdateFullscreenIcon()
