@@ -7,6 +7,7 @@ public class CameraController : MonoBehaviour
     public float minZoom = 5.0f;
     public float maxZoom = 20.0f;
     public GameObject panelSpeaker; // PanelSpeaker 오브젝트를 인스펙터에서 할당
+    public GameObject panelOption; // PanelOption 오브젝트를 인스펙터에서 할당
 
     private Vector3 dragOrigin;
 
@@ -33,9 +34,10 @@ public class CameraController : MonoBehaviour
 
     private void HandleMouseZoom()
     {
-        if (panelSpeaker != null && panelSpeaker.activeSelf)
+        // PanelSpeaker와 PanelOption이 활성화되어 있으면 확대/축소를 비활성화합니다.
+        if ((panelSpeaker != null && panelSpeaker.activeSelf) || (panelOption != null && panelOption.activeSelf))
         {
-            return; // PanelSpeaker가 활성화되어 있으면 확대/축소를 비활성화합니다.
+            return;
         }
 
         float scroll = Input.GetAxis("Mouse ScrollWheel");

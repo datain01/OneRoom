@@ -22,6 +22,11 @@ public class StopwatchManager : MonoBehaviour
         }
     }
 
+    public void SetRunning(bool running)
+    {
+        isRunning = running;
+    }
+
     public void StartPauseStopwatch()
     {
         isRunning = !isRunning;
