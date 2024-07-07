@@ -15,29 +15,42 @@ public class PanelSpeaker : MonoBehaviour
     public Button nextButton;
     public Button prevButton;
     public Button shuffleButton;
+    public Button repeatButton; // 반복 재생 버튼
     public Button buttonClose; // 닫기 버튼
     public Image buttonImage; // 재생/일시정지 버튼 아이콘 이미지
     public Sprite playIcon; // 재생 아이콘
     public Sprite pauseIcon; // 일시정지 아이콘
     public Image shuffleButtonImage; // 셔플 버튼 아이콘 이미지
+    public Image repeatButtonImage; // 반복 재생 버튼 아이콘 이미지
     public Sprite shuffleIcon; // 셔플 아이콘
     public Sprite noShuffleIcon; // 비셔플 아이콘
+    public Sprite repeatIcon; // 반복 재생 아이콘
+    public Sprite noRepeatIcon; // 비반복 재생 아이콘
     public Slider bgmSlider; // BGM 볼륨 조절 슬라이더
     public Button bgmMuteButton; // BGM 뮤트 버튼
+    public Button sfxMuteButton; // SFX 뮤트 버튼
     public Sprite muteIcon; // 뮤트 아이콘
     public Sprite unmuteIcon; // 비뮤트 아이콘
+    public Sprite sfxMuteIcon; // SFX 뮤트 아이콘
+    public Sprite sfxUnmuteIcon; // SFX 비뮤트 아이콘
+    public Slider sfxSlider; // SFX 볼륨 조절 슬라이더
 
     private List<string> playlist = new List<string>();
     private List<Button> buttons = new List<Button>();
     private int currentTrackIndex = 0;
     private bool isShuffling = false;
+    private bool isRepeating = false; // 반복 재생 상태
     private string selectedFilePath;
-    private AudioSource audioSource;
+    private AudioSource bgmAudioSource;
+    private AudioSource sfxAudioSource;
     private bool isMuted = false;
+    private bool isSfxMuted = false;
     public string musicFolderPath { get; private set; }
 
-    private const string VolumePrefKey = "BgmVolume";
-    private const string MutePrefKey = "BgmMute";
+    private const string BgmVolumePrefKey = "BgmVolume";
+    private const string BgmMutePrefKey = "BgmMute";
+    private const string SfxVolumePrefKey = "SfxVolume";
+    private const string SfxMutePrefKey = "SfxMute";
 
     private Button currentPlayingButton;
 
@@ -47,9 +60,12 @@ public class PanelSpeaker : MonoBehaviour
         nextButton.onClick.AddListener(PlayNextTrack);
         prevButton.onClick.AddListener(PlayPreviousTrack);
         shuffleButton.onClick.AddListener(ToggleShuffle);
+        repeatButton.onClick.AddListener(ToggleRepeat); // 반복 재생 버튼 이벤트 추가
         buttonClose.onClick.AddListener(ClosePanelSpeaker); // Close 버튼 이벤트 추가
-        bgmSlider.onValueChanged.AddListener(SetBgmVolume); // 슬라이더 이벤트 추가
-        bgmMuteButton.onClick.AddListener(ToggleMute); // 뮤트 버튼 이벤트 추가
+        bgmSlider.onValueChanged.AddListener(SetBgmVolume); // BGM 슬라이더 이벤트 추가
+        bgmMuteButton.onClick.AddListener(ToggleBgmMute); // BGM 뮤트 버튼 이벤트 추가
+        sfxSlider.onValueChanged.AddListener(SetSfxVolume); // SFX 슬라이더 이벤트 추가
+        sfxMuteButton.onClick.AddListener(ToggleSfxMute); // SFX 뮤트 버튼 이벤트 추가
     }
 
     public void InitializeSpeaker()
@@ -57,15 +73,29 @@ public class PanelSpeaker : MonoBehaviour
         GameObject bgmObject = GameObject.FindGameObjectWithTag("BGM");
         if (bgmObject != null)
         {
-            audioSource = bgmObject.GetComponent<AudioSource>();
-            if (audioSource == null)
+            bgmAudioSource = bgmObject.GetComponent<AudioSource>();
+            if (bgmAudioSource == null)
             {
-                audioSource = bgmObject.AddComponent<AudioSource>();
+                bgmAudioSource = bgmObject.AddComponent<AudioSource>();
             }
         }
         else
         {
             Debug.LogError("BGM 오브젝트를 찾을 수 없습니다. BGM 태그가 설정된 오브젝트를 확인해주세요.");
+        }
+
+        GameObject sfxObject = GameObject.FindGameObjectWithTag("SFX");
+        if (sfxObject != null)
+        {
+            sfxAudioSource = sfxObject.GetComponent<AudioSource>();
+            if (sfxAudioSource == null)
+            {
+                sfxAudioSource = sfxObject.AddComponent<AudioSource>();
+            }
+        }
+        else
+        {
+            Debug.LogError("SFX 오브젝트를 찾을 수 없습니다. SFX 태그가 설정된 오브젝트를 확인해주세요.");
         }
 
         musicFolderPath = Path.Combine(Application.persistentDataPath, "Music");
@@ -80,22 +110,39 @@ public class PanelSpeaker : MonoBehaviour
 
         LoadMusicFiles();
 
-        // PlayerPrefs에서 볼륨과 뮤트 상태를 불러옴
-        if (audioSource != null)
+        // PlayerPrefs에서 BGM 볼륨과 뮤트 상태를 불러옴
+        if (bgmAudioSource != null)
         {
-            float savedVolume = PlayerPrefs.GetFloat(VolumePrefKey, audioSource.volume);
-            bool savedMute = PlayerPrefs.GetInt(MutePrefKey, 0) == 1;
+            float savedBgmVolume = PlayerPrefs.GetFloat(BgmVolumePrefKey, bgmAudioSource.volume);
+            bool savedBgmMute = PlayerPrefs.GetInt(BgmMutePrefKey, 0) == 1;
 
-            bgmSlider.value = savedVolume;
-            audioSource.volume = savedVolume;
+            bgmSlider.value = savedBgmVolume;
+            bgmAudioSource.volume = savedBgmVolume;
 
-            isMuted = savedMute;
-            audioSource.mute = isMuted;
-            UpdateMuteIcon();
+            isMuted = savedBgmMute;
+            bgmAudioSource.mute = isMuted;
+            UpdateBgmMuteIcon();
+        }
+
+        // PlayerPrefs에서 SFX 볼륨과 뮤트 상태를 불러옴
+        if (sfxAudioSource != null)
+        {
+            float savedSfxVolume = PlayerPrefs.GetFloat(SfxVolumePrefKey, sfxAudioSource.volume);
+            bool savedSfxMute = PlayerPrefs.GetInt(SfxMutePrefKey, 0) == 1;
+
+            sfxSlider.value = savedSfxVolume;
+            sfxAudioSource.volume = savedSfxVolume;
+
+            isSfxMuted = savedSfxMute;
+            sfxAudioSource.mute = isSfxMuted;
+            UpdateSfxMuteIcon();
         }
 
         // 셔플 버튼을 비셔플 상태로 초기화
         shuffleButtonImage.sprite = noShuffleIcon;
+
+        // 반복 재생 버튼을 비반복 상태로 초기화
+        repeatButtonImage.sprite = noRepeatIcon;
     }
 
     private void LoadMusicFiles()
@@ -144,7 +191,7 @@ public class PanelSpeaker : MonoBehaviour
 
     public void TogglePlayPause()
     {
-        if (audioSource.isPlaying)
+        if (bgmAudioSource.isPlaying)
         {
             PauseMusic();
         }
@@ -196,15 +243,32 @@ public class PanelSpeaker : MonoBehaviour
             }
             else
             {
-                audioSource.clip = DownloadHandlerAudioClip.GetContent(www);
-                audioSource.Play();
+                bgmAudioSource.clip = DownloadHandlerAudioClip.GetContent(www);
+                bgmAudioSource.Play();
+
+                // 반복 재생을 위해 OnTrackEnd 코루틴 시작
+                StartCoroutine(OnTrackEnd(bgmAudioSource.clip.length));
             }
+        }
+    }
+
+    private IEnumerator OnTrackEnd(float trackLength)
+    {
+        yield return new WaitForSeconds(trackLength);
+        if (isRepeating)
+        {
+            bgmAudioSource.Play();
+            StartCoroutine(OnTrackEnd(trackLength)); // 다시 재생
+        }
+        else
+        {
+            PlayNextTrack(); // 다음 곡 재생
         }
     }
 
     public void PauseMusic()
     {
-        audioSource.Pause();
+        bgmAudioSource.Pause();
         buttonImage.sprite = playIcon;
     }
 
@@ -248,6 +312,12 @@ public class PanelSpeaker : MonoBehaviour
         shuffleButtonImage.sprite = isShuffling ? shuffleIcon : noShuffleIcon;
     }
 
+    public void ToggleRepeat()
+    {
+        isRepeating = !isRepeating;
+        repeatButtonImage.sprite = isRepeating ? repeatIcon : noRepeatIcon;
+    }
+
     private void ClosePanelSpeaker()
     {
         gameObject.SetActive(false); // 패널을 비활성화합니다.
@@ -255,25 +325,25 @@ public class PanelSpeaker : MonoBehaviour
 
     private void SetBgmVolume(float volume)
     {
-        if (audioSource != null)
+        if (bgmAudioSource != null)
         {
-            audioSource.volume = volume;
-            PlayerPrefs.SetFloat(VolumePrefKey, volume);
+            bgmAudioSource.volume = volume;
+            PlayerPrefs.SetFloat(BgmVolumePrefKey, volume);
         }
     }
 
-    private void ToggleMute()
+    private void ToggleBgmMute()
     {
-        if (audioSource != null)
+        if (bgmAudioSource != null)
         {
             isMuted = !isMuted;
-            audioSource.mute = isMuted;
-            PlayerPrefs.SetInt(MutePrefKey, isMuted ? 1 : 0);
-            UpdateMuteIcon();
+            bgmAudioSource.mute = isMuted;
+            PlayerPrefs.SetInt(BgmMutePrefKey, isMuted ? 1 : 0);
+            UpdateBgmMuteIcon();
         }
     }
 
-    private void UpdateMuteIcon()
+    private void UpdateBgmMuteIcon()
     {
         if (isMuted)
         {
@@ -282,6 +352,38 @@ public class PanelSpeaker : MonoBehaviour
         else
         {
             bgmMuteButton.image.sprite = unmuteIcon;
+        }
+    }
+
+    private void SetSfxVolume(float volume)
+    {
+        if (sfxAudioSource != null)
+        {
+            sfxAudioSource.volume = volume;
+            PlayerPrefs.SetFloat(SfxVolumePrefKey, volume);
+        }
+    }
+
+    private void ToggleSfxMute()
+    {
+        if (sfxAudioSource != null)
+        {
+            isSfxMuted = !isSfxMuted;
+            sfxAudioSource.mute = isSfxMuted;
+            PlayerPrefs.SetInt(SfxMutePrefKey, isSfxMuted ? 1 : 0);
+            UpdateSfxMuteIcon();
+        }
+    }
+
+    private void UpdateSfxMuteIcon()
+    {
+        if (isSfxMuted)
+        {
+            sfxMuteButton.image.sprite = sfxMuteIcon;
+        }
+        else
+        {
+            sfxMuteButton.image.sprite = sfxUnmuteIcon;
         }
     }
 }
