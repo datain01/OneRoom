@@ -7,6 +7,7 @@ public class DialogueManagerSec : MonoBehaviour
     public GameObject panelBubblePrefab; // PanelBubble 프리팹을 참조
     public DialogueData dialogueData; // DialogueData 스크립터블 오브젝트를 참조
     public GameObject panelSpeaker; // PanelSpeaker 오브젝트를 인스펙터에서 할당
+    public GameObject panelOption;
     public Canvas canvas; // UI 캔버스를 참조
 
     private GameObject character; // CharacterSec 오브젝트를 참조
@@ -88,5 +89,7 @@ public class DialogueManagerSec : MonoBehaviour
 
         // PanelSpeaker를 최상단으로 이동
         panelSpeaker.transform.SetAsLastSibling();
+
+        panelOption.transform.SetAsLastSibling();
     }
 }
