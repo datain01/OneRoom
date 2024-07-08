@@ -30,21 +30,23 @@ public class FoodDragger : MonoBehaviour
         isDragging = false;
 
         // 드롭된 위치 체크
-        Collider2D collider = Physics2D.OverlapPoint(GetMouseWorldPosition());
-        if (collider != null && collider.CompareTag("CharacterOne"))
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, 0.5f);
+        foreach (var collider in colliders)
         {
-            // Food 오브젝트 파괴
-            Destroy(gameObject);
+            if (collider.CompareTag("CharacterOne"))
+            {
+                // Food 오브젝트 파괴
+                Destroy(gameObject);
 
-            // Food 재생성 및 색상 변경 요청
-            FoodManager foodManager = FindObjectOfType<FoodManager>();
-            foodManager.StartCoroutine(foodManager.RespawnFoodAndChangeColor(collider.GetComponent<SpriteRenderer>()));
+                // Food 재생성 및 색상 변경 요청
+                FoodManager foodManager = FindObjectOfType<FoodManager>();
+                foodManager.StartCoroutine(foodManager.RespawnFoodAndChangeColor(collider.GetComponent<SpriteRenderer>()));
+                return;
+            }
         }
-        else
-        {
-            // 원래 위치로 복귀
-            transform.position = initialPosition;
-        }
+
+        // 원래 위치로 복귀
+        transform.position = initialPosition;
     }
 
     private Vector3 GetMouseWorldPosition()
