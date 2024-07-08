@@ -35,9 +35,11 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     public Sprite sfxUnmuteIcon;
     public Slider sfxSlider;
     public Slider musicProgressSlider;
+    public CanvasGroup canvasGroup;
 
     private List<string> playlist = new List<string>();
     private List<Button> buttons = new List<Button>();
+    private List<int> playedIndices = new List<int>();
     private int currentTrackIndex = 0;
     private bool isShuffling = false;
     private bool isRepeating = false;
@@ -52,6 +54,8 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     private const string BgmMutePrefKey = "BgmMute";
     private const string SfxVolumePrefKey = "SfxVolume";
     private const string SfxMutePrefKey = "SfxMute";
+    private const string ShufflePrefKey = "Shuffle";
+    private const string RepeatPrefKey = "Repeat";
 
     private Button currentPlayingButton;
     private bool isSliderDragging = false;
@@ -70,6 +74,12 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         sfxSlider.onValueChanged.AddListener(SetSfxVolume);
         sfxMuteButton.onClick.AddListener(ToggleSfxMute);
         musicProgressSlider.onValueChanged.AddListener(OnMusicProgressSliderChanged);
+
+        // 셔플 및 반복 상태를 PlayerPrefs에서 불러오기
+        isShuffling = PlayerPrefs.GetInt(ShufflePrefKey, 0) == 1;
+        isRepeating = PlayerPrefs.GetInt(RepeatPrefKey, 0) == 1;
+        shuffleButtonImage.sprite = isShuffling ? shuffleIcon : noShuffleIcon;
+        repeatButtonImage.sprite = isRepeating ? repeatIcon : noRepeatIcon;
     }
 
     private void Update()
@@ -146,9 +156,6 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
             sfxAudioSource.mute = isSfxMuted;
             UpdateSfxMuteIcon();
         }
-
-        shuffleButtonImage.sprite = noShuffleIcon;
-        repeatButtonImage.sprite = noRepeatIcon;
     }
 
     private void LoadMusicFiles()
@@ -225,6 +232,10 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         if (!string.IsNullOrEmpty(filePath))
         {
             selectedFilePath = filePath;
+
+            // 셔플 리스트 초기화
+            playedIndices.Clear();
+
             StartCoroutine(PlayTrack(selectedFilePath));
             buttonImage.sprite = pauseIcon;
 
@@ -302,12 +313,29 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         {
             if (isShuffling)
             {
-                currentTrackIndex = Random.Range(0, playlist.Count);
+                if (playedIndices.Count == playlist.Count)
+                {
+                    playedIndices.Clear();
+                }
+
+                List<int> availableIndices = new List<int>();
+                for (int i = 0; i < playlist.Count; i++)
+                {
+                    if (!playedIndices.Contains(i))
+                    {
+                        availableIndices.Add(i);
+                    }
+                }
+
+                int nextIndex = availableIndices[Random.Range(0, availableIndices.Count)];
+                playedIndices.Add(nextIndex);
+                currentTrackIndex = nextIndex;
             }
             else
             {
                 currentTrackIndex = (currentTrackIndex + 1) % playlist.Count;
             }
+
             selectedFilePath = playlist[currentTrackIndex];
             PlaySelectedMusic(selectedFilePath, buttons.Count > currentTrackIndex ? buttons[currentTrackIndex] : null);
         }
@@ -325,6 +353,7 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
             {
                 currentTrackIndex = (currentTrackIndex - 1 + playlist.Count) % playlist.Count;
             }
+
             selectedFilePath = playlist[currentTrackIndex];
             PlaySelectedMusic(selectedFilePath, buttons.Count > currentTrackIndex ? buttons[currentTrackIndex] : null);
         }
@@ -333,18 +362,28 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     public void ToggleShuffle()
     {
         isShuffling = !isShuffling;
+        PlayerPrefs.SetInt(ShufflePrefKey, isShuffling ? 1 : 0);
         shuffleButtonImage.sprite = isShuffling ? shuffleIcon : noShuffleIcon;
+
+        // 셔플 상태 변경 시에도 재생된 곡 리스트 초기화
+        if (isShuffling)
+        {
+            playedIndices.Clear();
+        }
     }
 
     public void ToggleRepeat()
     {
         isRepeating = !isRepeating;
+        PlayerPrefs.SetInt(RepeatPrefKey, isRepeating ? 1 : 0);
         repeatButtonImage.sprite = isRepeating ? repeatIcon : noRepeatIcon;
     }
 
     private void ClosePanelSpeaker()
     {
-        gameObject.SetActive(false);
+        canvasGroup.alpha = 0;
+        canvasGroup.blocksRaycasts = false;
+        canvasGroup.interactable = false;
     }
 
     private void SetBgmVolume(float volume)
