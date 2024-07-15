@@ -10,11 +10,16 @@ public class ChaController : MonoBehaviour
     private Vector3 targetPosition;
     private bool isMoving = false;
     private bool isDragged = false;
+    private Animator animator;
+    private bool isRight = false; // 기본값: 왼쪽
 
     private void Start()
     {
+        animator = GetComponent<Animator>();
         SetInitialPosition();
-        SetNewTargetPosition();
+        animator.SetBool("isWalking", false);
+        animator.SetBool("isRight", isRight); // 기본값을 좌측으로 설정
+        StartCoroutine(WaitAndMove()); // 시작 시 대기 상태로 설정
     }
 
     private void Update()
@@ -24,10 +29,6 @@ public class ChaController : MonoBehaviour
             if (isMoving)
             {
                 MoveCharacter();
-            }
-            else
-            {
-                StartCoroutine(WaitAndMove());
             }
         }
     }
@@ -85,6 +86,18 @@ public class ChaController : MonoBehaviour
         if (Vector3.Distance(transform.position, targetPosition) < 0.001f)
         {
             isMoving = false;
+            animator.SetBool("isWalking", false);
+            StartCoroutine(WaitAndMove());
+        }
+        else
+        {
+            bool newIsRight = targetPosition.x > transform.position.x;
+            if (isRight != newIsRight)
+            {
+                isRight = newIsRight;
+                animator.SetBool("isRight", isRight);
+            }
+            animator.SetBool("isWalking", true);
         }
     }
 
@@ -93,11 +106,16 @@ public class ChaController : MonoBehaviour
         yield return new WaitForSeconds(waitTime);
         SetNewTargetPosition();
         isMoving = true;
+        animator.SetBool("isWalking", true);
+        isRight = targetPosition.x > transform.position.x;
+        animator.SetBool("isRight", isRight);
     }
 
     private void OnMouseDown()
     {
         isDragged = true;
+        isMoving = false;
+        animator.SetBool("isWalking", false);
     }
 
     private void OnMouseDrag()
@@ -116,6 +134,9 @@ public class ChaController : MonoBehaviour
         isDragged = false;
         SetNewTargetPosition();
         isMoving = true;
+        animator.SetBool("isWalking", true);
+        isRight = targetPosition.x > transform.position.x;
+        animator.SetBool("isRight", isRight);
     }
 
     private bool IsWithinBoundary(Vector3 position)
@@ -134,5 +155,8 @@ public class ChaController : MonoBehaviour
         yield return new WaitForSeconds(waitTime);
         SetNewTargetPosition();
         isMoving = true;
+        animator.SetBool("isWalking", true);
+        isRight = targetPosition.x > transform.position.x;
+        animator.SetBool("isRight", isRight);
     }
 }
