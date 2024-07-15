@@ -21,13 +21,14 @@ public class CameraController : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(1))
         {
-            dragOrigin = Camera.main.ScreenToViewportPoint(Input.mousePosition);
+            dragOrigin = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
             return;
         }
 
         if (!Input.GetMouseButton(1)) return;
 
-        Vector3 direction = dragOrigin - Camera.main.ScreenToViewportPoint(Input.mousePosition);
+        Vector3 currentMousePosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
+        Vector3 direction = dragOrigin - currentMousePosition;
 
         Camera.main.transform.position += direction * dragSpeed;
     }
