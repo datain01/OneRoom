@@ -19,5 +19,16 @@ public class LikeSave : MonoBehaviour
         {
             likeDisplay.UpdateLikeDisplay();
         }
+
+        // 캐릭터에 LikeCharacter 메서드 호출
+        GameObject character = GameObject.FindWithTag(characterTag);
+        if (character != null)
+        {
+            ChaController controller = character.GetComponent<ChaController>();
+            if (controller != null)
+            {
+                controller.LikeCharacter();
+            }
+        }
     }
 }

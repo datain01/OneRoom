@@ -5,26 +5,31 @@ public class ChaController : MonoBehaviour
 {
     public float moveSpeed = 2.0f; // 이동 속도
     public float waitTime = 2.0f;  // 대기 시간
+    public float likeTime = 2.0f;  // Like 애니메이션 대기 시간
     public PolygonCollider2D boundaryCollider; // 다이아몬드 범위를 나타내는 PolygonCollider2D
+    public float dragThreshold = 0.1f; // 드래그로 간주되는 최소 거리
 
     private Vector3 targetPosition;
     private bool isMoving = false;
     private bool isDragged = false;
     private Animator animator;
     private bool isRight = false; // 기본값: 왼쪽
+    private bool isLiked = false;
+    private Vector3 initialMousePosition;
+    private bool wasWalking = false; // 캐릭터가 Like 애니메이션 전에 걷고 있었는지 여부
 
     private void Start()
     {
         animator = GetComponent<Animator>();
         SetInitialPosition();
-        animator.SetBool("isWalking", false);
+        animator.SetBool("isWalking", false); 
         animator.SetBool("isRight", isRight); // 기본값을 좌측으로 설정
         StartCoroutine(WaitAndMove()); // 시작 시 대기 상태로 설정
     }
 
     private void Update()
     {
-        if (!isDragged)
+        if (!isDragged && !isLiked)
         {
             if (isMoving)
             {
@@ -104,39 +109,50 @@ public class ChaController : MonoBehaviour
     private IEnumerator WaitAndMove()
     {
         yield return new WaitForSeconds(waitTime);
-        SetNewTargetPosition();
-        isMoving = true;
-        animator.SetBool("isWalking", true);
-        isRight = targetPosition.x > transform.position.x;
-        animator.SetBool("isRight", isRight);
+        if (!isLiked) // Like 상태가 아닐 때만 새로운 타겟 위치 설정
+        {
+            SetNewTargetPosition();
+            isMoving = true;
+            animator.SetBool("isWalking", true);
+            isRight = targetPosition.x > transform.position.x;
+            animator.SetBool("isRight", isRight);
+        }
     }
 
     private void OnMouseDown()
     {
-        isDragged = true;
-        isMoving = false;
-        animator.SetBool("isWalking", false);
+        isDragged = false;
+        initialMousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
     }
 
     private void OnMouseDrag()
     {
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector3 newPosition = new Vector3(mousePosition.x, mousePosition.y, transform.position.z);
-
-        if (IsWithinBoundary(newPosition))
+        if (Vector3.Distance(initialMousePosition, mousePosition) > dragThreshold)
         {
-            transform.position = newPosition;
+            isDragged = true;
+            Vector3 newPosition = new Vector3(mousePosition.x, mousePosition.y, transform.position.z);
+            if (IsWithinBoundary(newPosition))
+            {
+                transform.position = newPosition;
+            }
         }
     }
 
     private void OnMouseUp()
     {
-        isDragged = false;
-        SetNewTargetPosition();
-        isMoving = true;
-        animator.SetBool("isWalking", true);
-        isRight = targetPosition.x > transform.position.x;
-        animator.SetBool("isRight", isRight);
+        if (!isDragged && !isLiked) // Like 상태가 아닐 때만 클릭 이벤트 처리
+        {
+            LikeCharacter();
+        }
+        else
+        {
+            SetNewTargetPosition();
+            isMoving = true;
+            animator.SetBool("isWalking", true);
+            isRight = targetPosition.x > transform.position.x;
+            animator.SetBool("isRight", isRight);
+        }
     }
 
     private bool IsWithinBoundary(Vector3 position)
@@ -144,19 +160,43 @@ public class ChaController : MonoBehaviour
         return boundaryCollider.OverlapPoint(position);
     }
 
-    public void StopAndRestart()
+    public void LikeCharacter()
     {
-        StopAllCoroutines(); // 모든 코루틴을 멈추고
-        StartCoroutine(RestartAfterWait()); // 대기 후 다시 시작
+        if (!isLiked) // 이미 Like 상태가 아니라면 실행
+        {
+            StopAllCoroutines(); // 모든 코루틴을 멈추고
+            isLiked = true;
+
+            // 캐릭터가 걷고 있었는지 저장
+            wasWalking = isMoving;
+            isMoving = false;
+
+            animator.SetTrigger("Like");
+
+            // 일정 시간 대기 후 원래 상태로 돌아감
+            StartCoroutine(ResumeAfterLike());
+        }
     }
 
-    private IEnumerator RestartAfterWait()
+    private IEnumerator ResumeAfterLike()
     {
-        yield return new WaitForSeconds(waitTime);
-        SetNewTargetPosition();
-        isMoving = true;
-        animator.SetBool("isWalking", true);
-        isRight = targetPosition.x > transform.position.x;
-        animator.SetBool("isRight", isRight);
+        yield return new WaitForSeconds(likeTime);
+        isLiked = false;
+        
+        // 원래 상태로 돌아감
+        if (wasWalking)
+        {
+            isMoving = true;
+            animator.SetBool("isWalking", true);
+            isRight = targetPosition.x > transform.position.x;
+            animator.SetBool("isRight", isRight);
+        }
+        else
+        {
+            animator.SetBool("isWalking", false);
+        }
+
+        // 대기 후 다시 이동 시작
+        StartCoroutine(WaitAndMove());
     }
 }
