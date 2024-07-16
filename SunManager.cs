@@ -5,6 +5,9 @@ using System;
 public class SunManager : MonoBehaviour
 {
     public Light2D lightSun; // Light2D 오브젝트
+    public SpriteRenderer sky; // sky 스프라이트
+    public Sprite[] skySprites; // 아침, 정오, 저녁, 밤 스프라이트 배열
+
     private float morningIntensity = 0.5f;
     private float noonIntensity = 1.0f;
     private float eveningIntensity = 0.7f;
@@ -13,6 +16,13 @@ public class SunManager : MonoBehaviour
     private Color noonColor = Color.white; // 흰색
     private Color eveningColor = new Color(1.0f, 0.3f, 0.3f); // 붉은색
     private Color nightColor = new Color(0.2f, 0.2f, 0.5f); // 어두운 파란색
+
+    private Sprite currentSprite;
+
+    void Start()
+    {
+        UpdateSunlight();
+    }
 
     void Update()
     {
@@ -27,27 +37,38 @@ public class SunManager : MonoBehaviour
 
         if (hour >= 6 && hour < 12) // 아침
         {
-            lightSun.color = Color.Lerp(morningColor, noonColor, t);
-            lightSun.intensity = Mathf.Lerp(morningIntensity, noonIntensity, t);
+            SetLightAndSprite(morningColor, noonColor, morningIntensity, noonIntensity, skySprites[0]);
         }
-        else if (hour >= 12 && hour < 16) // 정오
+        else if (hour >= 12 && hour < 18) // 정오
         {
-            lightSun.color = Color.Lerp(noonColor, eveningColor, t);
-            lightSun.intensity = Mathf.Lerp(noonIntensity, eveningIntensity, t);
+            SetLightAndSprite(noonColor, eveningColor, noonIntensity, eveningIntensity, skySprites[1]);
         }
-        else if (hour >= 16 && hour < 18) // 저녁
+        else if (hour >= 18 && hour < 21) // 저녁
         {
-            lightSun.color = Color.Lerp(eveningColor, nightColor, t);
-            lightSun.intensity = Mathf.Lerp(eveningIntensity, nightIntensity, t);
+            SetLightAndSprite(eveningColor, nightColor, eveningIntensity, nightIntensity, skySprites[2]);
         }
         else // 밤
         {
             int nextHour = (hour + 1) % 24;
             Color nextColor = (nextHour >= 6 && nextHour < 12) ? morningColor : nightColor;
             float nextIntensity = (nextHour >= 6 && nextHour < 12) ? morningIntensity : nightIntensity;
+            Sprite nextSprite = (nextHour >= 6 && nextHour < 12) ? skySprites[0] : skySprites[3];
 
-            lightSun.color = Color.Lerp(nightColor, nextColor, t);
-            lightSun.intensity = Mathf.Lerp(nightIntensity, nextIntensity, t);
+            SetLightAndSprite(nightColor, nextColor, nightIntensity, nextIntensity, skySprites[3]);
+        }
+    }
+
+    void SetLightAndSprite(Color startColor, Color endColor, float startIntensity, float endIntensity, Sprite newSprite)
+    {
+        DateTime now = DateTime.Now;
+        float t = (now.Minute + now.Second / 60f) / 60f;
+
+        lightSun.color = Color.Lerp(startColor, endColor, t);
+        lightSun.intensity = Mathf.Lerp(startIntensity, endIntensity, t);
+
+        if (sky.sprite != newSprite)
+        {
+            sky.sprite = newSprite;
         }
     }
 }
