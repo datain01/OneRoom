@@ -14,6 +14,6 @@ public class LikeDisplay : MonoBehaviour
     public void UpdateLikeDisplay()
     {
         int currentLikes = PlayerPrefs.GetInt(characterTag + "_like", 0);
-        likeText.text = currentLikes;
+        likeText.text = currentLikes.ToString(); // int를 string으로 변환
     }
 }
