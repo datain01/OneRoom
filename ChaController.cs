@@ -147,6 +147,7 @@ public class ChaController : MonoBehaviour
         }
         else
         {
+            isDragged = false;
             SetNewTargetPosition();
             isMoving = true;
             animator.SetBool("isWalking", true);
