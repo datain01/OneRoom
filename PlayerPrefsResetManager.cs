@@ -52,6 +52,13 @@ public class PlayerPrefsResetManager : MonoBehaviour
 
         // 초기화 후 다시 값을 로드하거나 UI를 업데이트하는 코드 추가 가능
         Debug.Log("PlayerPrefs 초기화 완료. BGM, SFX 볼륨 및 뮤트 상태는 유지됨.");
+
+        // panelWarningInstance 파괴
+        if (panelWarningInstance != null)
+        {
+            Destroy(panelWarningInstance);
+            panelWarningInstance = null;
+        }
     }
 
     // ButtonNo에 연결할 메서드

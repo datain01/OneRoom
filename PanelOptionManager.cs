@@ -17,6 +17,8 @@ public class PanelOptionManager : MonoBehaviour
     public Button pipButton; // PiP 모드 전환 버튼 추가
     public Sprite fullscreenIcon; // 전체화면 아이콘
     public Sprite windowedIcon; // 창모드 아이콘
+    public Sprite pipIcon; // PiP 모드 아이콘 추가
+    public Sprite normalIcon; // PiP 모드가 아닐 때 아이콘 추가
     private bool isFullscreen = true; // 현재 전체화면 상태를 저장
     private bool isPipMode = false; // PiP 모드 상태를 저장
     public StopwatchManager stopwatchManager; // 스톱워치 매니저 참조
@@ -84,6 +86,7 @@ public class PanelOptionManager : MonoBehaviour
 
         // 초기 아이콘 설정
         UpdateFullscreenIcon();
+        UpdatePipIcon();
     }
 
     private void Update()
@@ -285,6 +288,7 @@ public class PanelOptionManager : MonoBehaviour
             // PiP 모드 해제: 원래 크기로 복원 (여기서는 예시로 1920x1080 해상도로 설정)
             SetWindowPos(GetForegroundWindow(), HWND_NOTOPMOST, 0, 0, 1920, 1080, SWP_SHOWWINDOW);
         }
+        UpdatePipIcon();
     }
 
     private void UpdateFullscreenIcon()
@@ -296,6 +300,18 @@ public class PanelOptionManager : MonoBehaviour
         else
         {
             fullscreenButton.GetComponent<Image>().sprite = windowedIcon;
+        }
+    }
+
+    private void UpdatePipIcon()
+    {
+        if (isPipMode)
+        {
+            pipButton.GetComponent<Image>().sprite = pipIcon;
+        }
+        else
+        {
+            pipButton.GetComponent<Image>().sprite = normalIcon;
         }
     }
 }
