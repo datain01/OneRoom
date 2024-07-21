@@ -6,6 +6,7 @@ public class ChaController : MonoBehaviour
     public float moveSpeed = 2.0f; // 이동 속도
     public float waitTime = 2.0f;  // 대기 시간
     public float likeTime = 2.0f;  // Like 애니메이션 대기 시간
+    public float eatTime = 2.0f;   // Eat 애니메이션 대기 시간
     public PolygonCollider2D boundaryCollider; // 다이아몬드 범위를 나타내는 PolygonCollider2D
     public float dragThreshold = 0.1f; // 드래그로 간주되는 최소 거리
 
@@ -15,6 +16,7 @@ public class ChaController : MonoBehaviour
     private Animator animator;
     private bool isRight = false; // 기본값: 왼쪽
     private bool isLiked = false;
+    private bool isEating = false;
     private Vector3 initialMousePosition;
     private bool wasWalking = false; // 캐릭터가 Like 애니메이션 전에 걷고 있었는지 여부
 
@@ -29,7 +31,7 @@ public class ChaController : MonoBehaviour
 
     private void Update()
     {
-        if (!isDragged && !isLiked)
+        if (!isDragged && !isLiked && !isEating)
         {
             if (isMoving)
             {
@@ -109,7 +111,7 @@ public class ChaController : MonoBehaviour
     private IEnumerator WaitAndMove()
     {
         yield return new WaitForSeconds(waitTime);
-        if (!isLiked) // Like 상태가 아닐 때만 새로운 타겟 위치 설정
+        if (!isLiked && !isEating) // Like 상태가 아닐 때만 새로운 타겟 위치 설정
         {
             SetNewTargetPosition();
             isMoving = true;
@@ -141,7 +143,7 @@ public class ChaController : MonoBehaviour
 
     private void OnMouseUp()
     {
-        if (!isDragged && !isLiked) // Like 상태가 아닐 때만 클릭 이벤트 처리
+        if (!isDragged && !isLiked && !isEating) // Like 상태가 아닐 때만 클릭 이벤트 처리
         {
             LikeCharacter();
         }
@@ -163,7 +165,7 @@ public class ChaController : MonoBehaviour
 
     public void LikeCharacter()
     {
-        if (!isLiked) // 이미 Like 상태가 아니라면 실행
+        if (!isLiked && !isEating) // 이미 Like 상태가 아니라면 실행
         {
             StopAllCoroutines(); // 모든 코루틴을 멈추고
             isLiked = true;
@@ -179,10 +181,51 @@ public class ChaController : MonoBehaviour
         }
     }
 
+    public void EatCharacter()
+    {
+        if (!isEating && !isLiked) // 이미 Eat 상태가 아니라면 실행
+        {
+            StopAllCoroutines(); // 모든 코루틴을 멈추고
+            isEating = true;
+
+            // 캐릭터가 걷고 있었는지 저장
+            wasWalking = isMoving;
+            isMoving = false;
+
+            // Eat 트리거 설정
+            animator.SetTrigger("Eat");
+
+            // 일정 시간 대기 후 원래 상태로 돌아감
+            StartCoroutine(ResumeAfterEat());
+        }
+    }
+
     private IEnumerator ResumeAfterLike()
     {
         yield return new WaitForSeconds(likeTime);
         isLiked = false;
+        
+        // 원래 상태로 돌아감
+        if (wasWalking)
+        {
+            isMoving = true;
+            animator.SetBool("isWalking", true);
+            isRight = targetPosition.x > transform.position.x;
+            animator.SetBool("isRight", isRight);
+        }
+        else
+        {
+            animator.SetBool("isWalking", false);
+        }
+
+        // 대기 후 다시 이동 시작
+        StartCoroutine(WaitAndMove());
+    }
+
+    private IEnumerator ResumeAfterEat()
+    {
+        yield return new WaitForSeconds(eatTime);
+        isEating = false;
         
         // 원래 상태로 돌아감
         if (wasWalking)

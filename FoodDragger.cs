@@ -38,9 +38,9 @@ public class FoodDragger : MonoBehaviour
                 // Food 오브젝트 파괴
                 Destroy(gameObject);
 
-                // Food 재생성 및 색상 변경 요청
+                // Food 재생성 및 Eat 애니메이션 재생 요청
                 FoodManager foodManager = FindObjectOfType<FoodManager>();
-                foodManager.StartCoroutine(foodManager.RespawnFoodAndChangeColor(collider.GetComponent<SpriteRenderer>()));
+                foodManager.StartCoroutine(foodManager.RespawnFoodAndPlayEatAnimation());
                 return;
             }
         }

@@ -7,6 +7,7 @@ public class FoodManager : MonoBehaviour
     public Transform foodSpawn;
     public LikeSave likeSave; // LikeSave 스크립트를 참조
     public LikeDisplay likeDisplay; // LikeDisplay 스크립트를 참조
+    public ChaController characterController; // ChaController 스크립트를 참조
 
     private GameObject currentFood;
 
@@ -20,15 +21,15 @@ public class FoodManager : MonoBehaviour
         currentFood = Instantiate(foodPrefab, foodSpawn.position, Quaternion.identity);
     }
 
-    public IEnumerator RespawnFoodAndChangeColor(SpriteRenderer characterRenderer)
+    public IEnumerator RespawnFoodAndPlayEatAnimation()
     {
-        // CharacterOne의 색을 빨간색으로 변경
-        characterRenderer.color = Color.red;
+        // Eat 애니메이션 재생
+        if (characterController != null)
+        {
+            characterController.EatCharacter();
+        }
 
-        yield return new WaitForSeconds(1f);
-
-        // CharacterOne의 색을 하얀색으로 되돌림
-        characterRenderer.color = Color.white;
+        yield return new WaitForSeconds(characterController.eatTime); // 애니메이션이 재생되는 동안 대기
 
         // Food 재생성
         SpawnFood();
