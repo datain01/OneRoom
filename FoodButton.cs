@@ -1,0 +1,52 @@
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+
+public class FoodButton : MonoBehaviour
+{
+    public string characterTag; // Inspector에서 설정
+    public ChaController characterController; // 캐릭터 컨트롤러 참조
+    public LikeDisplay likeDisplay; // LikeDisplay 참조
+
+    private Button button;
+
+    private void Start()
+    {
+        button = GetComponent<Button>();
+        button.onClick.AddListener(OnButtonClick);
+    }
+
+    private void OnButtonClick()
+    {
+        if (characterController != null)
+        {
+            // Eat 애니메이션 재생
+            characterController.EatCharacter();
+            StartCoroutine(HandleEatAnimation());
+        }
+    }
+
+    private IEnumerator HandleEatAnimation()
+    {
+        // 애니메이션 재생 시간 동안 대기
+        yield return new WaitForSeconds(characterController.eatTime);
+
+        // Like 값 증가
+        IncreaseLike(characterTag);
+    }
+
+    private void IncreaseLike(string characterTag)
+    {
+        int currentLikes = PlayerPrefs.GetInt(characterTag + "_like", 0);
+        currentLikes += 5; // +5 증가
+        PlayerPrefs.SetInt(characterTag + "_like", currentLikes);
+        PlayerPrefs.Save();
+        Debug.Log(characterTag + " likes: " + currentLikes);
+
+        // LikeDisplay 업데이트
+        if (likeDisplay != null && likeDisplay.characterTag == characterTag)
+        {
+            likeDisplay.UpdateLikeDisplay();
+        }
+    }
+}
