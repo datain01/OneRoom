@@ -7,6 +7,7 @@ public class StopwatchManager : MonoBehaviour
     private float elapsedTime = 0f;
 
     public StopwatchDisplay stopwatchDisplay;
+    public AudioSource audioSource; // 효과음을 재생할 AudioSource
 
     private void Start()
     {
@@ -30,6 +31,9 @@ public class StopwatchManager : MonoBehaviour
     public void StartPauseStopwatch()
     {
         isRunning = !isRunning;
+
+        // 효과음 재생
+        PlayClickSound();
     }
 
     public void ResetStopwatch()
@@ -37,5 +41,16 @@ public class StopwatchManager : MonoBehaviour
         isRunning = false;
         elapsedTime = 0f;
         stopwatchDisplay.UpdateDisplay(elapsedTime);
+
+        // 효과음 재생
+        PlayClickSound();
+    }
+
+    private void PlayClickSound()
+    {
+        if (audioSource != null)
+        {
+            audioSource.Play();
+        }
     }
 }

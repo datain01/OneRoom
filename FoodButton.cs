@@ -7,6 +7,7 @@ public class FoodButton : MonoBehaviour
     public string characterTag; // Inspector에서 설정
     public ChaController characterController; // 캐릭터 컨트롤러 참조
     public LikeDisplay likeDisplay; // LikeDisplay 참조
+    public AudioSource audioSource; // 효과음을 재생할 AudioSource
 
     private Button button;
 
@@ -23,6 +24,9 @@ public class FoodButton : MonoBehaviour
             // Eat 애니메이션 재생
             characterController.EatCharacter();
             StartCoroutine(HandleEatAnimation());
+
+            // 효과음 재생
+            PlayClickSound();
         }
     }
 
@@ -47,6 +51,14 @@ public class FoodButton : MonoBehaviour
         if (likeDisplay != null && likeDisplay.characterTag == characterTag)
         {
             likeDisplay.UpdateLikeDisplay();
+        }
+    }
+
+    private void PlayClickSound()
+    {
+        if (audioSource != null)
+        {
+            audioSource.Play();
         }
     }
 }
