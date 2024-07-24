@@ -44,8 +44,8 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     private bool isShuffling = false;
     private bool isRepeating = false;
     private string selectedFilePath;
-    private AudioSource bgmAudioSource;
-    private AudioSource sfxAudioSource;
+    private List<AudioSource> bgmAudioSources = new List<AudioSource>();
+    private List<AudioSource> sfxAudioSources = new List<AudioSource>();
     private bool isMuted = false;
     private bool isSfxMuted = false;
     public string musicFolderPath { get; private set; }
@@ -84,40 +84,37 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
     private void Update()
     {
-        if (bgmAudioSource.isPlaying && !isSliderDragging)
+        foreach (var bgmAudioSource in bgmAudioSources)
         {
-            musicProgressSlider.value = bgmAudioSource.time / bgmAudioSource.clip.length;
+            if (bgmAudioSource.isPlaying && !isSliderDragging)
+            {
+                musicProgressSlider.value = bgmAudioSource.time / bgmAudioSource.clip.length;
+            }
         }
     }
 
     public void InitializeSpeaker()
     {
-        GameObject bgmObject = GameObject.FindGameObjectWithTag("BGM");
-        if (bgmObject != null)
+        GameObject[] bgmObjects = GameObject.FindGameObjectsWithTag("BGM");
+        foreach (GameObject bgmObject in bgmObjects)
         {
-            bgmAudioSource = bgmObject.GetComponent<AudioSource>();
+            AudioSource bgmAudioSource = bgmObject.GetComponent<AudioSource>();
             if (bgmAudioSource == null)
             {
                 bgmAudioSource = bgmObject.AddComponent<AudioSource>();
             }
-        }
-        else
-        {
-            Debug.LogError("BGM 오브젝트를 찾을 수 없습니다. BGM 태그가 설정된 오브젝트를 확인해주세요.");
+            bgmAudioSources.Add(bgmAudioSource);
         }
 
-        GameObject sfxObject = GameObject.FindGameObjectWithTag("SFX");
-        if (sfxObject != null)
+        GameObject[] sfxObjects = GameObject.FindGameObjectsWithTag("SFX");
+        foreach (GameObject sfxObject in sfxObjects)
         {
-            sfxAudioSource = sfxObject.GetComponent<AudioSource>();
+            AudioSource sfxAudioSource = sfxObject.GetComponent<AudioSource>();
             if (sfxAudioSource == null)
             {
                 sfxAudioSource = sfxObject.AddComponent<AudioSource>();
             }
-        }
-        else
-        {
-            Debug.LogError("SFX 오브젝트를 찾을 수 없습니다. SFX 태그가 설정된 오브젝트를 확인해주세요.");
+            sfxAudioSources.Add(sfxAudioSource);
         }
 
         musicFolderPath = Path.Combine(Application.persistentDataPath, "Music");
@@ -131,7 +128,7 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
         LoadMusicFiles();
 
-        if (bgmAudioSource != null)
+        foreach (var bgmAudioSource in bgmAudioSources)
         {
             float savedBgmVolume = PlayerPrefs.GetFloat(BgmVolumePrefKey, bgmAudioSource.volume);
             bool savedBgmMute = PlayerPrefs.GetInt(BgmMutePrefKey, 0) == 1;
@@ -144,7 +141,7 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
             UpdateBgmMuteIcon();
         }
 
-        if (sfxAudioSource != null)
+        foreach (var sfxAudioSource in sfxAudioSources)
         {
             float savedSfxVolume = PlayerPrefs.GetFloat(SfxVolumePrefKey, sfxAudioSource.volume);
             bool savedSfxMute = PlayerPrefs.GetInt(SfxMutePrefKey, 0) == 1;
@@ -203,25 +200,28 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
     public void TogglePlayPause()
     {
-        if (bgmAudioSource.isPlaying)
+        foreach (var bgmAudioSource in bgmAudioSources)
         {
-            PauseMusic();
-        }
-        else
-        {
-            if (bgmAudioSource.clip != null && bgmAudioSource.time > 0)
+            if (bgmAudioSource.isPlaying)
             {
-                UnPauseMusic();
+                PauseMusic();
             }
             else
             {
-                if (string.IsNullOrEmpty(selectedFilePath) && playlist.Count > 0)
+                if (bgmAudioSource.clip != null && bgmAudioSource.time > 0)
                 {
-                    PlaySelectedMusic(playlist[0], buttons.Count > 0 ? buttons[0] : null);
+                    UnPauseMusic();
                 }
                 else
                 {
-                    PlaySelectedMusic(selectedFilePath, currentPlayingButton);
+                    if (string.IsNullOrEmpty(selectedFilePath) && playlist.Count > 0)
+                    {
+                        PlaySelectedMusic(playlist[0], buttons.Count > 0 ? buttons[0] : null);
+                    }
+                    else
+                    {
+                        PlaySelectedMusic(selectedFilePath, currentPlayingButton);
+                    }
                 }
             }
         }
@@ -265,29 +265,32 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
             }
             else
             {
-                bgmAudioSource.clip = DownloadHandlerAudioClip.GetContent(www);
-                bgmAudioSource.Play();
-
-                if (trackEndCoroutine != null)
+                foreach (var bgmAudioSource in bgmAudioSources)
                 {
-                    StopCoroutine(trackEndCoroutine);
+                    bgmAudioSource.clip = DownloadHandlerAudioClip.GetContent(www);
+                    bgmAudioSource.Play();
+
+                    if (trackEndCoroutine != null)
+                    {
+                        StopCoroutine(trackEndCoroutine);
+                    }
+                    trackEndCoroutine = StartCoroutine(OnTrackEnd(bgmAudioSource));
                 }
-                trackEndCoroutine = StartCoroutine(OnTrackEnd());
             }
         }
     }
 
-    private IEnumerator OnTrackEnd()
+    private IEnumerator OnTrackEnd(AudioSource audioSource)
     {
-        while (bgmAudioSource.isPlaying || bgmAudioSource.time < bgmAudioSource.clip.length)
+        while (audioSource.isPlaying || audioSource.time < audioSource.clip.length)
         {
             yield return null;
         }
 
         if (isRepeating)
         {
-            bgmAudioSource.time = 0;
-            bgmAudioSource.Play();
+            audioSource.time = 0;
+            audioSource.Play();
         }
         else
         {
@@ -297,13 +300,19 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
     public void PauseMusic()
     {
-        bgmAudioSource.Pause();
+        foreach (var bgmAudioSource in bgmAudioSources)
+        {
+            bgmAudioSource.Pause();
+        }
         buttonImage.sprite = playIcon;
     }
 
     public void UnPauseMusic()
     {
-        bgmAudioSource.UnPause();
+        foreach (var bgmAudioSource in bgmAudioSources)
+        {
+            bgmAudioSource.UnPause();
+        }
         buttonImage.sprite = pauseIcon;
     }
 
@@ -388,22 +397,28 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
     private void SetBgmVolume(float volume)
     {
-        if (bgmAudioSource != null)
+        foreach (var bgmAudioSource in bgmAudioSources)
         {
-            bgmAudioSource.volume = volume;
-            PlayerPrefs.SetFloat(BgmVolumePrefKey, volume);
+            if (bgmAudioSource != null)
+            {
+                bgmAudioSource.volume = volume;
+                PlayerPrefs.SetFloat(BgmVolumePrefKey, volume);
+            }
         }
     }
 
     private void ToggleBgmMute()
     {
-        if (bgmAudioSource != null)
+        isMuted = !isMuted;
+        foreach (var bgmAudioSource in bgmAudioSources)
         {
-            isMuted = !isMuted;
-            bgmAudioSource.mute = isMuted;
-            PlayerPrefs.SetInt(BgmMutePrefKey, isMuted ? 1 : 0);
-            UpdateBgmMuteIcon();
+            if (bgmAudioSource != null)
+            {
+                bgmAudioSource.mute = isMuted;
+                PlayerPrefs.SetInt(BgmMutePrefKey, isMuted ? 1 : 0);
+            }
         }
+        UpdateBgmMuteIcon();
     }
 
     private void UpdateBgmMuteIcon()
@@ -420,22 +435,28 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
     private void SetSfxVolume(float volume)
     {
-        if (sfxAudioSource != null)
+        foreach (var sfxAudioSource in sfxAudioSources)
         {
-            sfxAudioSource.volume = volume;
-            PlayerPrefs.SetFloat(SfxVolumePrefKey, volume);
+            if (sfxAudioSource != null)
+            {
+                sfxAudioSource.volume = volume;
+                PlayerPrefs.SetFloat(SfxVolumePrefKey, volume);
+            }
         }
     }
 
     private void ToggleSfxMute()
     {
-        if (sfxAudioSource != null)
+        isSfxMuted = !isSfxMuted;
+        foreach (var sfxAudioSource in sfxAudioSources)
         {
-            isSfxMuted = !isSfxMuted;
-            sfxAudioSource.mute = isSfxMuted;
-            PlayerPrefs.SetInt(SfxMutePrefKey, isSfxMuted ? 1 : 0);
-            UpdateSfxMuteIcon();
+            if (sfxAudioSource != null)
+            {
+                sfxAudioSource.mute = isSfxMuted;
+                PlayerPrefs.SetInt(SfxMutePrefKey, isSfxMuted ? 1 : 0);
+            }
         }
+        UpdateSfxMuteIcon();
     }
 
     private void UpdateSfxMuteIcon()
@@ -452,20 +473,23 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
     private void OnMusicProgressSliderChanged(float value)
     {
-        if (bgmAudioSource.clip != null)
+        foreach (var bgmAudioSource in bgmAudioSources)
         {
-            bgmAudioSource.time = value * bgmAudioSource.clip.length;
-            if (!bgmAudioSource.isPlaying)
+            if (bgmAudioSource.clip != null)
             {
-                bgmAudioSource.Play();
-                buttonImage.sprite = pauseIcon;
-            }
+                bgmAudioSource.time = value * bgmAudioSource.clip.length;
+                if (!bgmAudioSource.isPlaying)
+                {
+                    bgmAudioSource.Play();
+                    buttonImage.sprite = pauseIcon;
+                }
 
-            if (trackEndCoroutine != null)
-            {
-                StopCoroutine(trackEndCoroutine);
+                if (trackEndCoroutine != null)
+                {
+                    StopCoroutine(trackEndCoroutine);
+                }
+                trackEndCoroutine = StartCoroutine(OnTrackEnd(bgmAudioSource));
             }
-            trackEndCoroutine = StartCoroutine(OnTrackEnd());
         }
     }
 
@@ -474,7 +498,10 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         if (eventData.pointerPress == musicProgressSlider.gameObject)
         {
             isSliderDragging = true;
-            bgmAudioSource.Pause();
+            foreach (var bgmAudioSource in bgmAudioSources)
+            {
+                bgmAudioSource.Pause();
+            }
         }
     }
 
@@ -483,15 +510,18 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         if (eventData.pointerPress == musicProgressSlider.gameObject)
         {
             isSliderDragging = false;
-            bgmAudioSource.time = musicProgressSlider.value * bgmAudioSource.clip.length;
-            bgmAudioSource.Play();
-            buttonImage.sprite = pauseIcon;
-
-            if (trackEndCoroutine != null)
+            foreach (var bgmAudioSource in bgmAudioSources)
             {
-                StopCoroutine(trackEndCoroutine);
+                bgmAudioSource.time = musicProgressSlider.value * bgmAudioSource.clip.length;
+                bgmAudioSource.Play();
+                buttonImage.sprite = pauseIcon;
+
+                if (trackEndCoroutine != null)
+                {
+                    StopCoroutine(trackEndCoroutine);
+                }
+                trackEndCoroutine = StartCoroutine(OnTrackEnd(bgmAudioSource));
             }
-            trackEndCoroutine = StartCoroutine(OnTrackEnd());
         }
     }
 }
