@@ -3,7 +3,8 @@ using UnityEngine;
 public class PlayerPrefsResetManager : MonoBehaviour
 {
     public GameObject panelWarningInstance;
-    private LikeDisplay likeDisplay; // LikeDisplay 참조 제거
+    private LikeDisplay likeDisplay; // LikeDisplay 참조
+    private LikeDisplay likeDisplaySec; // LikeDisplaySec 참조
 
     private const string BgmVolumePrefKey = "BgmVolume";
     private const string BgmMutePrefKey = "BgmMute";
@@ -21,6 +22,17 @@ public class PlayerPrefsResetManager : MonoBehaviour
         else
         {
             Debug.LogError("Like 태그를 가진 오브젝트를 찾을 수 없습니다.");
+        }
+
+        // LikeSec 태그로 LikeDisplaySec를 찾기
+        GameObject likeDisplaySecObject = GameObject.FindGameObjectWithTag("LikeSec");
+        if (likeDisplaySecObject != null)
+        {
+            likeDisplaySec = likeDisplaySecObject.GetComponent<LikeDisplay>();
+        }
+        else
+        {
+            Debug.LogError("LikeSec 태그를 가진 오브젝트를 찾을 수 없습니다.");
         }
     }
 
@@ -48,6 +60,12 @@ public class PlayerPrefsResetManager : MonoBehaviour
         if (likeDisplay != null)
         {
             likeDisplay.UpdateLikeDisplay();
+        }
+
+        // LikeDisplaySec 업데이트
+        if (likeDisplaySec != null)
+        {
+            likeDisplaySec.UpdateLikeDisplay();
         }
 
         // 초기화 후 다시 값을 로드하거나 UI를 업데이트하는 코드 추가 가능

@@ -10,6 +10,9 @@ public class ChaController : MonoBehaviour
     public PolygonCollider2D boundaryCollider; // 다이아몬드 범위를 나타내는 PolygonCollider2D
     public float dragThreshold = 0.1f; // 드래그로 간주되는 최소 거리
 
+    public AudioSource likeAudioSource; // Like 효과음을 재생할 AudioSource
+    public AudioSource eatAudioSource; // Eat 효과음을 재생할 AudioSource
+
     private Vector3 targetPosition;
     private bool isMoving = false;
     private bool isDragged = false;
@@ -165,7 +168,7 @@ public class ChaController : MonoBehaviour
 
     public void LikeCharacter()
     {
-        if (!isLiked && !isEating) // 이미 Like 상태가 아니라면 실행
+        if (!isEating) 
         {
             StopAllCoroutines(); // 모든 코루틴을 멈추고
             isLiked = true;
@@ -173,6 +176,9 @@ public class ChaController : MonoBehaviour
             // 캐릭터가 걷고 있었는지 저장
             wasWalking = isMoving;
             isMoving = false;
+
+            // Like 애니메이션 효과음 재생
+            PlayLikeSound();
 
             animator.SetTrigger("Like");
 
@@ -183,7 +189,7 @@ public class ChaController : MonoBehaviour
 
     public void EatCharacter()
     {
-        if (!isEating && !isLiked) // 이미 Eat 상태가 아니라면 실행
+        if (!isLiked)
         {
             StopAllCoroutines(); // 모든 코루틴을 멈추고
             isEating = true;
@@ -191,6 +197,9 @@ public class ChaController : MonoBehaviour
             // 캐릭터가 걷고 있었는지 저장
             wasWalking = isMoving;
             isMoving = false;
+
+            // Eat 애니메이션 효과음 재생
+            PlayEatSound();
 
             // Eat 트리거 설정
             animator.SetTrigger("Eat");
@@ -242,5 +251,21 @@ public class ChaController : MonoBehaviour
 
         // 대기 후 다시 이동 시작
         StartCoroutine(WaitAndMove());
+    }
+
+    private void PlayLikeSound()
+    {
+        if (likeAudioSource != null)
+        {
+            likeAudioSource.Play();
+        }
+    }
+
+    private void PlayEatSound()
+    {
+        if (eatAudioSource != null)
+        {
+            eatAudioSource.Play();
+        }
     }
 }

@@ -32,11 +32,11 @@ public class FoodButton : MonoBehaviour
 
     private IEnumerator HandleEatAnimation()
     {
-        // 애니메이션 재생 시간 동안 대기
-        yield return new WaitForSeconds(characterController.eatTime);
-
         // Like 값 증가
         IncreaseLike(characterTag);
+        // 애니메이션 재생 시간 동안 대기
+        yield return new WaitForSeconds(characterController.eatTime);
+        
     }
 
     private void IncreaseLike(string characterTag)
