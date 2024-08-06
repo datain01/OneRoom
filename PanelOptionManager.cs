@@ -65,6 +65,9 @@ public class PanelOptionManager : MonoBehaviour
 
     private void Start()
     {
+        // 게임 실행 시 timeScale을 1로 설정
+        Time.timeScale = 1;
+
         // PanelOption을 비활성화 상태로 설정
         panelOption.SetActive(false);
 
@@ -95,6 +98,7 @@ public class PanelOptionManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             panelOption.SetActive(!panelOption.activeSelf);
+            Time.timeScale = panelOption.activeSelf ? 0 : 1; // 패널 활성화 시 시간 정지, 비활성화 시 시간 재개
         }
 
         // 포커스된 프로그램 확인
