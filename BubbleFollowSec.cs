@@ -17,6 +17,7 @@ public class BubbleFollowSec : MonoBehaviour
         if (targetObject != null)
         {
             target = targetObject.transform;
+            UpdatePosition(); // 초기 위치 설정
         }
         else
         {
@@ -28,8 +29,13 @@ public class BubbleFollowSec : MonoBehaviour
     {
         if (target != null)
         {
-            Vector3 worldPosition = target.position + offset;
-            rectTransform.position = worldPosition;
+            UpdatePosition();
         }
+    }
+
+    private void UpdatePosition()
+    {
+        Vector3 worldPosition = target.position + offset;
+        rectTransform.position = worldPosition;
     }
 }

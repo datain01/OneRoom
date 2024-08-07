@@ -33,38 +33,29 @@ public class SunManager : MonoBehaviour
     {
         DateTime now = DateTime.Now;
         int hour = now.Hour;
-        float t = (now.Minute + now.Second / 60f) / 60f; // 시간 내의 비율
 
         if (hour >= 6 && hour < 12) // 아침
         {
-            SetLightAndSprite(morningColor, noonColor, morningIntensity, noonIntensity, skySprites[0]);
+            SetLightAndSprite(morningColor, morningIntensity, skySprites[0]);
         }
         else if (hour >= 12 && hour < 18) // 정오
         {
-            SetLightAndSprite(noonColor, eveningColor, noonIntensity, eveningIntensity, skySprites[1]);
+            SetLightAndSprite(noonColor, noonIntensity, skySprites[1]);
         }
         else if (hour >= 18 && hour < 21) // 저녁
         {
-            SetLightAndSprite(eveningColor, nightColor, eveningIntensity, nightIntensity, skySprites[2]);
+            SetLightAndSprite(eveningColor, eveningIntensity, skySprites[2]);
         }
         else // 밤
         {
-            int nextHour = (hour + 1) % 24;
-            Color nextColor = (nextHour >= 6 && nextHour < 12) ? morningColor : nightColor;
-            float nextIntensity = (nextHour >= 6 && nextHour < 12) ? morningIntensity : nightIntensity;
-            Sprite nextSprite = (nextHour >= 6 && nextHour < 12) ? skySprites[0] : skySprites[3];
-
-            SetLightAndSprite(nightColor, nextColor, nightIntensity, nextIntensity, skySprites[3]);
+            SetLightAndSprite(nightColor, nightIntensity, skySprites[3]);
         }
     }
 
-    void SetLightAndSprite(Color startColor, Color endColor, float startIntensity, float endIntensity, Sprite newSprite)
+    void SetLightAndSprite(Color color, float intensity, Sprite newSprite)
     {
-        DateTime now = DateTime.Now;
-        float t = (now.Minute + now.Second / 60f) / 60f;
-
-        lightSun.color = Color.Lerp(startColor, endColor, t);
-        lightSun.intensity = Mathf.Lerp(startIntensity, endIntensity, t);
+        lightSun.color = color;
+        lightSun.intensity = intensity;
 
         if (sky.sprite != newSprite)
         {

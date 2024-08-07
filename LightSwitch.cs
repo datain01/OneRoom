@@ -18,6 +18,6 @@ public class LightSwitch : MonoBehaviour
     void ToggleLight()
     {
         isLightOn = !isLightOn;
-        globalLight.intensity = isLightOn ? 1.0f : 0.0f; // 밝기 조절
+        globalLight.intensity = isLightOn ? 1.0f : 0.2f; // 밝기 조절
     }
 }
