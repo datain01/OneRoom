@@ -16,7 +16,6 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     public Button prevButton;
     public Button shuffleButton;
     public Button repeatButton;
-    public Button buttonClose;
     public Image buttonImage;
     public Sprite playIcon;
     public Sprite pauseIcon;
@@ -68,7 +67,6 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         prevButton.onClick.AddListener(PlayPreviousTrack);
         shuffleButton.onClick.AddListener(ToggleShuffle);
         repeatButton.onClick.AddListener(ToggleRepeat);
-        buttonClose.onClick.AddListener(ClosePanelSpeaker);
         bgmSlider.onValueChanged.AddListener(SetBgmVolume);
         bgmMuteButton.onClick.AddListener(ToggleBgmMute);
         sfxSlider.onValueChanged.AddListener(SetSfxVolume);
@@ -386,13 +384,6 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         isRepeating = !isRepeating;
         PlayerPrefs.SetInt(RepeatPrefKey, isRepeating ? 1 : 0);
         repeatButtonImage.sprite = isRepeating ? repeatIcon : noRepeatIcon;
-    }
-
-    private void ClosePanelSpeaker()
-    {
-        canvasGroup.alpha = 0;
-        canvasGroup.blocksRaycasts = false;
-        canvasGroup.interactable = false;
     }
 
     private void SetBgmVolume(float volume)
