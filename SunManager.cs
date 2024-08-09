@@ -38,11 +38,11 @@ public class SunManager : MonoBehaviour
         {
             SetLightAndSprite(morningColor, morningIntensity, skySprites[0]);
         }
-        else if (hour >= 12 && hour < 18) // 정오
+        else if (hour >= 12 && hour < 16) // 정오
         {
             SetLightAndSprite(noonColor, noonIntensity, skySprites[1]);
         }
-        else if (hour >= 18 && hour < 21) // 저녁
+        else if (hour >= 16 && hour < 18) // 저녁
         {
             SetLightAndSprite(eveningColor, eveningIntensity, skySprites[2]);
         }
