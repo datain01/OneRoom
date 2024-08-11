@@ -6,18 +6,20 @@ public class SunManager : MonoBehaviour
 {
     public Light2D lightSun; // Light2D 오브젝트
     public SpriteRenderer sky; // sky 스프라이트
-    public Sprite[] skySprites; // 아침, 정오, 저녁, 밤 스프라이트 배열
+    public Sprite[] skySprites; // 아침, 정오, 노을, 저녁, 밤 스프라이트 배열
 
     private float morningIntensity = 0.5f;
     private float noonIntensity = 1.0f;
-    private float eveningIntensity = 0.7f;
+    private float sunsetIntensity = 0.7f;
+    private float eveningIntensity = 0.5f;
     private float nightIntensity = 0.2f;
-    private Color morningColor = new Color(1.0f, 0.5f, 0.3f); // 오렌지색
-    private Color noonColor = Color.white; // 흰색
-    private Color eveningColor = new Color(1.0f, 0.3f, 0.3f); // 붉은색
-    private Color nightColor = new Color(0.2f, 0.2f, 0.5f); // 어두운 파란색
 
-    private Sprite currentSprite;
+    // 수정된 아침과 밤 컬러
+    private Color morningColor = new Color(1.0f, 0.9f, 0.7f); // 흰색에 가까운 오렌지/노란색
+    private Color noonColor = Color.white; // 흰색
+    private Color sunsetColor = new Color(1.0f, 0.3f, 0.3f); // 붉은색
+    private Color eveningColor = new Color(0.7f, 0.4f, 0.6f); // 저녁빛
+    private Color nightColor = new Color(0.3f, 0.3f, 0.6f); // 덜 어두운 파란색
 
     void Start()
     {
@@ -34,21 +36,25 @@ public class SunManager : MonoBehaviour
         DateTime now = DateTime.Now;
         int hour = now.Hour;
 
-        if (hour >= 6 && hour < 12) // 아침
+        if (hour >= 6 && hour < 10) // 아침
         {
             SetLightAndSprite(morningColor, morningIntensity, skySprites[0]);
         }
-        else if (hour >= 12 && hour < 16) // 정오
+        else if (hour >= 10 && hour < 16) // 정오
         {
             SetLightAndSprite(noonColor, noonIntensity, skySprites[1]);
         }
-        else if (hour >= 16 && hour < 18) // 저녁
+        else if (hour >= 16 && hour < 18) // 노을
         {
-            SetLightAndSprite(eveningColor, eveningIntensity, skySprites[2]);
+            SetLightAndSprite(sunsetColor, sunsetIntensity, skySprites[2]);
+        }
+        else if (hour >= 18 && hour < 20) // 저녁
+        {
+            SetLightAndSprite(eveningColor, eveningIntensity, skySprites[3]);
         }
         else // 밤
         {
-            SetLightAndSprite(nightColor, nightIntensity, skySprites[3]);
+            SetLightAndSprite(nightColor, nightIntensity, skySprites[4]);
         }
     }
 
