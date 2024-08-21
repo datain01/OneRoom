@@ -43,7 +43,7 @@ public class PanelSpeaker : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     private bool isShuffling = false;
     private bool isRepeating = false;
     private string selectedFilePath;
-    private List<AudioSource> bgmAudioSources = new List<AudioSource>();
+    public List<AudioSource> bgmAudioSources = new List<AudioSource>();
     private List<AudioSource> sfxAudioSources = new List<AudioSource>();
     private bool isMuted = false;
     private bool isSfxMuted = false;
