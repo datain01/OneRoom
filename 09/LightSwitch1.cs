@@ -2,10 +2,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Rendering.Universal;
 
-public class LightSwitch : MonoBehaviour
+public class LightSwitch1 : MonoBehaviour
 {
     public Light2D globalLight; // Global Light 2D 오브젝트
     public Button switchButton; // UI 버튼
+    public LightAnimation lightAnimation; // LightAnimation 스크립트를 참조
 
     public bool isLightOn = true;
 
@@ -27,5 +28,11 @@ public class LightSwitch : MonoBehaviour
     void UpdateLight()
     {
         globalLight.intensity = isLightOn ? 1.0f : 0.2f; // 밝기 조절
+
+        // LightAnimation 스크립트의 상태 업데이트 메서드 호출
+        if (lightAnimation != null)
+        {
+            lightAnimation.UpdateLightState(isLightOn);
+        }
     }
 }

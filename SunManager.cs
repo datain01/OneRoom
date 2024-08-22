@@ -18,7 +18,7 @@ public class SunManager : MonoBehaviour
     private Color morningColor = new Color(1.0f, 0.9f, 0.7f); // 흰색에 가까운 오렌지/노란색
     private Color noonColor = Color.white; // 흰색
     private Color sunsetColor = new Color(1.0f, 0.3f, 0.3f); // 붉은색
-    private Color eveningColor = new Color(0.7f, 0.4f, 0.6f); // 저녁빛
+    private Color eveningColor = new Color(0.4f, 0.4f, 0.7f); // 저녁빛
     private Color nightColor = new Color(0.3f, 0.3f, 0.6f); // 덜 어두운 파란색
 
     void Start()
