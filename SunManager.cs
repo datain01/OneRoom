@@ -9,10 +9,10 @@ public class SunManager : MonoBehaviour
     public Sprite[] skySprites; // 아침, 정오, 노을, 저녁, 밤 스프라이트 배열
 
     private float morningIntensity = 0.5f;
-    private float noonIntensity = 1.0f;
+    private float noonIntensity = 0.7f;
     private float sunsetIntensity = 0.7f;
     private float eveningIntensity = 0.5f;
-    private float nightIntensity = 0.2f;
+    private float nightIntensity = 0.3f;
 
     // 수정된 아침과 밤 컬러
     private Color morningColor = new Color(1.0f, 0.9f, 0.7f); // 흰색에 가까운 오렌지/노란색

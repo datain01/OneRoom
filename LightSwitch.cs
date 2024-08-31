@@ -26,6 +26,6 @@ public class LightSwitch : MonoBehaviour
 
     void UpdateLight()
     {
-        globalLight.intensity = isLightOn ? 1.0f : 0.2f; // 밝기 조절
+        globalLight.intensity = isLightOn ? 1.0f : 0.3f; // 밝기 조절
     }
 }
