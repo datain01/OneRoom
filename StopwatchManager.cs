@@ -3,8 +3,8 @@ using System.Collections;
 
 public class StopwatchManager : MonoBehaviour
 {
-    private bool isRunning = false;
-    private float elapsedTime = 0f;
+    public bool isRunning = false;
+    public float elapsedTime = 0f;
 
     public StopwatchDisplay stopwatchDisplay;
     public AudioSource audioSource; // 효과음을 재생할 AudioSource
@@ -15,7 +15,7 @@ public class StopwatchManager : MonoBehaviour
     }
 
     private void Update()
-    {
+    {  
         if (isRunning)
         {
             elapsedTime += Time.deltaTime;
