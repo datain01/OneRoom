@@ -38,9 +38,9 @@ public class FoodButton23 : MonoBehaviour
             if (stopwatchManager.isRunning)
             {
                 float timeSinceLastActivation = stopwatchManager.elapsedTime - lastActivationTime;
-                if (timeSinceLastActivation >= 3.0f)
+                if (timeSinceLastActivation >= 3600.0f)
                 {
-                    lastActivationTime += 3.0f;
+                    lastActivationTime += 3600.0f;
                     clickAllowance++; // 클릭 횟수 증가
                     button.interactable = clickAllowance > 0; // 버튼 활성화 조건 체크
                 }
