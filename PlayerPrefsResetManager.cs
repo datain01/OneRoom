@@ -11,9 +11,6 @@ public class PlayerPrefsResetManager : MonoBehaviour
     private const string SfxVolumePrefKey = "SfxVolume";
     private const string SfxMutePrefKey = "SfxMute";
 
-    private LikeGift likeGiftOne;       // CharacterOne의 LikeGift 참조
-    private LikeGift likeGiftSec;       // CharacterSec의 LikeGift 참조
-
     private void Start()
     {
         // Like 태그로 LikeDisplay를 찾기
@@ -36,28 +33,6 @@ public class PlayerPrefsResetManager : MonoBehaviour
         else
         {
             Debug.LogError("LikeSec 태그를 가진 오브젝트를 찾을 수 없습니다.");
-        }
-
-        // LikeGiftOne 태그로 LikeGiftOne을 찾기
-        GameObject likeGiftOneObject = GameObject.FindGameObjectWithTag("LikeGiftOne");
-        if (likeGiftOneObject != null)
-        {
-            likeGiftOne = likeGiftOneObject.GetComponent<LikeGift>();
-        }
-        else
-        {
-            Debug.LogError("LikeGiftOne 태그를 가진 오브젝트를 찾을 수 없습니다.");
-        }
-
-        // LikeGiftSec 태그로 LikeGiftSec을 찾기
-        GameObject likeGiftSecObject = GameObject.FindGameObjectWithTag("LikeGiftSec");
-        if (likeGiftSecObject != null)
-        {
-            likeGiftSec = likeGiftSecObject.GetComponent<LikeGift>();
-        }
-        else
-        {
-            Debug.LogError("LikeGiftSec 태그를 가진 오브젝트를 찾을 수 없습니다.");
         }
     }
 
@@ -90,24 +65,6 @@ public class PlayerPrefsResetManager : MonoBehaviour
         if (likeDisplaySec != null)
         {
             likeDisplaySec.UpdateLikeDisplay();
-        }
-
-        // milestone 리셋 (LikeGift 스크립트에 있는 리셋 메서드 호출)
-        if (likeGiftOne != null)
-        {
-            likeGiftOne.ResetMilestone();
-        }
-
-        if (likeGiftSec != null)
-        {
-            likeGiftSec.ResetMilestone();
-        }
-
-        // panelWarningInstance 파괴
-        if (panelWarningInstance != null)
-        {
-            Destroy(panelWarningInstance);
-            panelWarningInstance = null;
         }
 
         // 초기화 후 다시 값을 로드하거나 UI를 업데이트하는 코드 추가 가능

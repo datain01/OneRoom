@@ -71,13 +71,13 @@ public class DialogueManagerSec : MonoBehaviour
         if (string.IsNullOrEmpty(dialogue)) return;
 
         // 캐릭터 위에 위치하도록 설정
-        Vector3 offset = new Vector3(0.3f, 1.3f, 0f); // UI 오프셋
+        Vector3 offset = new Vector3(1.3f, 1.5f, 0f); // UI 오프셋
         Vector3 spawnPosition = character.transform.position + offset;
 
         GameObject bubble = Instantiate(panelBubblePrefab, spawnPosition, Quaternion.identity, canvas.transform);
 
         // BubbleFollow 스크립트 설정
-        BubbleFollow bubbleFollow = bubble.GetComponent<BubbleFollow>();
+        BubbleFollowSec bubbleFollow = bubble.GetComponent<BubbleFollowSec>();
         if (bubbleFollow != null)
         {
             bubbleFollow.offset = offset;
